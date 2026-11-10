@@ -1,0 +1,26 @@
+ICCT Rack Topology 2.2.1
+- Fixed Cacti 1.2.30 installation failure: plugin metadata now supplies required longname/name fields.
+- Hardened plugin version metadata parsing with safe defaults.
+- Strengthened subtle 3D cabinet top/side depth styling.
+
+ICCT Rack Topology 2.2.0
+- Production rack-workspace redesign based on common DCIM rack-view patterns
+- All racks rendered horizontally in one workspace; no rack selector
+- Adjustable rack width and U-height; Fit All action
+- Front view only
+- Cacti devices shown in left sidebar with native drag/drop placement
+- Peripherals tab with built-in passive rack items
+- 3D rack cabinet styling
+- Local front-panel SVG stencils for device images
+- Device status badges from Cacti host state
+- Right-side placement inspector for U-height/stencil changes
+- Collision validation across devices and peripherals
+- Simplified rack creation: Rack Name + Rack Units only
+- Separate paginated audit log
+- Cacti full-page refresh suppressed; status refresh is AJAX only
+
+2.3.0
+- Fixed stale CSS/JS cache issue by using versioned asset filenames.
+- Rebuilt left device/peripheral library to force compact cards and thumbnail sizing.
+- Rebuilt rack stage as explicit horizontal flex strip.
+- Refined light 3D rack cabinet with front usability plus top/right depth.

@@ -1,0 +1,37 @@
+# Runtime and generated data
+**/runtime/*
+!**/runtime/.gitkeep
+**/cache/*
+**/logs/*
+**/log/*
+**/tmp/*
+**/temp/*
+**/*.log
+**/*.ndjson
+**/*.rrd
+**/*.pid
+**/*.sock
+**/*.sqlite
+**/*.db
+
+# Local configuration and credentials
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+
+# Backups and temporary files
+**/*.bak
+**/*.old
+**/*~
+
+# Locally uploaded files (preserve directory protection files)
+**/uploads/*
+!**/uploads/.gitignore
+!**/uploads/.htaccess
+
+# Duplicate packaged archive; source is already included in icct_nms/
+/icct_nms.zip

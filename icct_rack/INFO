@@ -1,0 +1,10 @@
+[info]
+name = icct_rack
+version = 2.3.0
+longname = ICCT Rack Topology
+author = ICCT NMS Team
+email =
+homepage =
+compat = 1.2.30
+requires =
+capabilities = online_view:1, online_mgmt:1, offline_view:1, offline_mgmt:1, remote_collect:0

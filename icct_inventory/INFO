@@ -1,0 +1,10 @@
+[info]
+name = "icct_inventory"
+version = "1.0.0"
+longname = "ICCT Inventory and Protocol Integration"
+author = "ICCT NMS Team"
+email = ""
+homepage = ""
+compat = "1.2.30"
+requires = ""
+capabilities = "online_view:1, online_mgmt:1, offline_view:1, offline_mgmt:1, remote_collect:0"

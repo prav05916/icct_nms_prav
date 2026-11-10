@@ -1,0 +1,13 @@
+[Unit]
+Description=Run ICCT NMS NetFlow sync worker every minute
+After=network.target
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Persistent=true
+Unit=icct-nms-netflow-worker.service
+
+[Install]
+WantedBy=timers.target
+

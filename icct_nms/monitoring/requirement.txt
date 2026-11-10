@@ -1,0 +1,864 @@
+Understand first very carefully what I am going to make and give a brief summary about the project and make tables and relations and also make one plugin for map view topology (write code for this ...I want to understand that how can I make a plugin and add it in cacti ) use relavent tech....in case any confusion please ask for
+
+
+Chapter 5
+Specifications & scope of work for NMS software
+5.1 Introduction
+
+ICCT is a shelter based communication terminal which provides reliable and secure data & voice communication among weapon system elements across LAN and WAN. Typical deployment configuration consisting of multiple sites connected through ICCT over VSAT and leased-line links, is shown in figure 5.1. Each site has one or more local nodes, which are connected to ICCT over dedicated optical link and/or line-of-sight link.
+
+Figure 5.1: ICCT network
+
+The network shown in the figure can be understood as follows:
+
+                         ┌─────────┐
+                         │  NOC    │
+                         └────┬────┘
+                              │
+                              │
+                         ┄┄┄┄┄┴┄┄┄┄┄
+                              WAN
+                 ╱             │             ╲
+                ╱              │              ╲
+               ╱               │               ╲
+        SITE-A             SITE-B             SITE-D
+     ┌──────────┐        ┌──────────┐       ┌──────────┐
+     │   Node   │        │   ICCT   │       │   ICCT   │
+     └────┬─────┘        └────┬─────┘       └────┬─────┘
+          │                   │                  │
+     ┌────┴─────┐        ┌────┴─────┐       ┌────┴─────┐
+     │   ICCT   │        │   Node   │       │   Node/  │
+     └──────────┘        └──────────┘       │ Launcher │
+                                            └──────────┘
+
+        SITE-C
+     ┌──────────┐
+     │   Node   │
+     └────┬─────┘
+          │
+     ┌────┴─────┐
+     │   ICCT   │
+     └──────────┘
+          │
+       Launcher
+
+
+Connectivity shown in Figure 5.1:
+
+VSAT, Leased-line link → WAN connectivity between sites/NOC.
+Optical fiber link → Connection between local Node and ICCT.
+Line-of-sight (LOS) link → Wireless LOS connection between relevant communication points.
+
+The original figure represents SITE-A, SITE-B, SITE-C and SITE-D, connected through the WAN, with a NOC at the centre. Each ICCT can communicate with its local Node through optical fiber and/or LOS links.
+
+ICCT comprises of various communication devices such as edge routers, core switches, access switches, satellite modems etc. The connectivity over WAN is provided by VSAT and leased-line network.
+
+This chapter is intended to bring out the key requirements of the both the LNMS to be used in each ICCT and the CNMS to be used at Network operations centre (NOC).
+
+5.2 ICCT NMS requirements
+5.2.1
+
+NMS for ICCT shall have a two-tier architecture with LNMS in each ICCT and a CNMS at NOC. This section covers high-level requirements of both the LNMS and the CNMS.
+
+5.2.2 LNMS requirements
+5.2.2.1
+
+LNMS shall possess the capability to perform various network management functions as per Fault, Configuration, Accounting, Performance & Security (FCAPS) reference model (see [60]).
+
+5.2.2.2
+
+LNMS shall be developed on Linux, Apache®, MySQL® & PHP (LAMP) stack using Cacti® monitoring software and its plug-in architecture (see www.cacti.net).
+
+5.2.2.3
+
+LNMS shall support industry standard protocols including SNMP v1/v2c/v3, Syslog, Telnet, SSH, Cisco® discovery protocol (CDP), Link layer discovery protocol (LLDP), Trivial file transfer protocol (TFTP), FTP, NTP, Terminal access control system (TACACS+), Cisco® NetFlow & Internet Protocol Flow Information Export (IPFIX).
+
+5.2.2.4
+
+LNMS shall have provision to communicate local status to LNMS of remote ICCTs.
+
+5.2.2.5
+
+LNMS shall have a North bound interface (NBI) for interacting with CNMS. It shall periodically update the CNMS with ICCT status and shall post critical events/alarms on occurrence.
+
+5.2.2.6
+
+LNMS shall have a web based User interface (UI) to provide monitoring and control functions.
+
+5.2.3 CNMS requirements
+5.2.3.1
+
+CNMS shall monitor and present consolidated status of all ICCTs and operational status of various communication links between them.
+
+5.2.3.2
+
+CNMS shall have all the features of LNMS along with the following additional requirements.
+
+5.2.3.2.1
+
+CNMS shall have a South bound interface (SBI) for listening to status updates and events from each ICCT through its LNMS.
+
+5.2.3.2.2
+
+CNMS shall have provision for cross-launching local NMS of any ICCT.
+
+5.2.3.2.3
+
+CNMS shall also have a web based UI to provide necessary monitoring and control functions.
+
+
+
+5.2.3.2.4
+
+It shall have a high availability architecture (1+1 including database replication) with support for both co-located and geographically redundant configuration.
+
+5.2.4 Overall architecture
+
+The ICCT NMS interfaces and high-level architecture are shown in figure 5.2.
+
+Figure 5.2: NMS interfaces
+
+The architecture shown in the figure can be represented clearly as follows:
+
+                         ┌──────────────────────┐
+                         │         NOC          │
+                         │   ICCT Central NMS   │
+                         └──────────┬───────────┘
+                                    │
+                                    │
+                 HTTPS (Cross launch)│
+                 Heart beat information
+                 Health/Performance data
+                 Events/Alarms
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   ICCT Local NMS     │
+                         └──────────┬───────────┘
+                                    │
+                     MANAGEMENT     │
+                      PROTOCOLS     │
+                                    │
+                                    ▼
+              ┌──────────────────────────────────────┐
+              │            ICCT SUBSYSTEMS            │
+              │                                      │
+              │ ┌──────────────┐ ┌──────────────┐    │
+              │ │VOICE/VIDEO   │ │  SECURITY    │    │
+              │ │              │ │              │    │
+              │ │ VoIP server  │ │ Encryptor    │    │
+              │ │ IP Phone     │ │ Data diode   │    │
+              │ │ IP Camera    │ │ ...          │    │
+              │ └──────────────┘ └──────────────┘    │
+              │                                      │
+              │ ┌──────────────┐ ┌──────────────┐    │
+              │ │   NETWORK    │ │     VSAT     │    │
+              │ │ Core Switch  │ │ Modems       │    │
+              │ │ Edge Routers │ │ BUCs         │    │
+              │ │ Access       │ │ Beacon       │    │
+              │ │ Switches ... │ │ Tracker      │    │
+              │ └──────────────┘ │ Antenna       │    │
+              │                  │ Control Unit  │    │
+              │                  └──────────────┘    │
+              │                                      │
+              │ ┌──────────────┐ ┌──────────────┐    │
+              │ │     LOS      │ │  COMPUTERS   │    │
+              │ │ LOS Radio    │ │ Workstations │    │
+              │ │ Antenna      │ │ Thin Clients │    │
+              │ │ Positioner   │ └──────────────┘    │
+              │ │ Mast         │                     │
+              │ └──────────────┘                     │
+              │                                      │
+              │ ┌──────────────┐ ┌──────────────┐    │
+              │ │    POWER     │ │   TIMING     │    │
+              │ │ UPS          │ │ TWSTFT       │    │
+              │ │ ...          │ │ NTP Clients  │    │
+              │ └──────────────┘ │ ...          │    │
+              │                  └──────────────┘    │
+              │                                      │
+              │ ┌──────────────┐ ┌──────────────┐    │
+              │ │    FIRE      │ │   SENSORS &  │    │
+              │ │  PREVENTION  │ │ INSTRUMENTATION│  │
+              │ │ VESDA        │ │ GNSS compass │    │
+              │ │ Hydrogen     │ │ Hygro        │    │
+              │ │ Gas detector │ │ Thermometer  │    │
+              │ │ ...          │ │ ...          │    │
+              │ └──────────────┘ └──────────────┘    │
+              └──────────────────────────────────────┘
+
+Interfaces and protocols shown in Figure 5.2
+
+North Bound Interface (NBI):
+
+The ICCT Local NMS communicates with the ICCT Central NMS through the North Bound Interface (NBI).
+
+The information exchanged includes:
+
+HTTPS (Cross launch)
+Heart beat information
+Health/Performance data
+Events/Alarms
+
+The ICCT Local NMS also communicates with the ICCT Remote NMS through the NBI for health data.
+
+Management Protocols:
+
+The ICCT Local NMS communicates with the ICCT subsystems using:
+
+SNMP
+CLI
+HTTP/HTTPS
+TELNET/SSH
+SERIAL PROTOCOLS
+TFTP/FTP
+NetFlow
+TACACS+
+
+ICCT Subsystems shown:
+
+VOICE/VIDEO
+VoIP server
+IP Phone
+IP Camera
+SECURITY
+Encryptor
+Data diode
+...
+NETWORK
+Core Switch
+Edge Routers
+Access Switches
+...
+VSAT
+Modems
+BUCs
+Beacon Tracker
+Antenna Control Unit
+LOS
+LOS Radio
+Antenna Positioner
+Mast
+COMPUTERS
+Workstations
+Thin Clients
+POWER
+UPS
+...
+TIMING
+TWSTFT
+NTP Clients
+...
+FIRE PREVENTION
+VESDA
+Hydrogen Gas detector
+...
+SENSORS & INSTRUMENTATION
+GNSS compass
+Hygro Thermometer
+...
+5.3 Scope of work for LNMS
+
+This section addresses the scope of work of LNMS with detailed specification and requirements. The ICCT LNMS design shall follow FCAPS reference management model, the details of which are provided in the following subsections.
+
+5.3.1 Fault management
+
+Fault management involves detection, isolation, correction and logging of events/faults at system and subsystem level. The ICCT LNMS shall have the feature to perform both passive and active fault management
+
+
+**Technical specifications**
+**[Restricted]**
+
+### 5.3.1.1  Passive fault management
+
+**5.3.1.1.1** ICCT LNMS shall be capable of receiving, decoding and displaying the following set of protocols: SNMP traps (v1,v2), SNMP notification, Syslog, vendor-specific protocols
+
+**5.3.1.1.2** For non-SNMP (serial) devices the SNMP adaptors/proxies must be capable of generating SNMP traps and/or Syslog events based on the configuration.
+
+**5.3.1.1.3** The adaptor/proxy must poll the user-defined parameters and generate an event or alarm in the form of standard SNMP trap/Syslog.
+
+**5.3.1.1.4** The ICCT LNMS must be capable of receiving and processing a minimum of 1000 traps/s.
+
+### 5.3.1.2  Active fault management
+
+**5.3.1.2.1** ICCT LNMS shall have the capability to monitor standard and user-defined parameters for both SNMP and non-SNMP subsystems.
+
+**5.3.1.2.2** Standard parameters shall consist of management variables under Management information base (MIB)-II (see [61]) which are applicable for Layer-2 and Layer-3 devices.
+
+**5.3.1.2.3** User-defined parameters consist of management variables selected/configured by the user that are defined in the MIBs of the respective devices.
+
+**5.3.1.2.4** Default and customized templates of critical parameters must be provided for ICCT elements.
+
+**5.3.1.2.5** Upon selecting the device the corresponding templates with parameters list must be displayed. The user selects the parameters to be monitored.
+
+**5.3.1.2.6** In summary the user must be able to perform following activities
+
+(a) Creation and modification of templates for managed devices and its parameters
+
+(b) Selection of managed device and parameters to be monitored
+
+(c) Defining the minimum, maximum thresholds and rate of poll
+
+(d) Define the severity-level to be reported in case of exceeding the minimum and/or maximum threshold values
+
+### 5.3.1.3  Fault management console
+
+**5.3.1.3.1** Events captured as part of passive fault management and events generated as part of active fault management, irrespective of the native protocol (Syslog, SNMP trap, vendor-specific message) shall be converted to a common event message format before storing in the NMS data base.
+
+**5.3.1.3.2** The processed and stored events shall be presented to the user in near real-time on a unified fault management console with relevant details as mentioned below.
+
+(a) Source (Name, IP Address for IP enabled devices, Type of network element, model number and serial number)
+
+(b) Date and time-stamp
+
+(c) Severity with appropriate color code
+
+---
+
+
+**Technical Specifications**
+**[Restricted]**
+
+(d) Generic and detailed description specific to the event/alarm/trap
+
+(e) Possible help information describing corrective action to be taken by the user
+
+(f) User acknowledgment status
+
+(g) Event count
+
+**5.3.1.3.3** The console shall have provision to filter through the events based on a combination of one or more of the following parameters
+
+(a) Single or multiple sources
+
+(b) Data and time window
+
+(c) One of more severity levels
+
+(d) User acknowledgment status
+
+**5.3.1.3.4** The user must be able to navigate from the source to its detailed view from the fault console.
+
+### 5.3.1.4  Actions
+
+The ICCT LNMS, apart from displaying the fault should support the following actions when an event/fault occurs
+
+**5.3.1.4.1** **Audio:** A unique tune or sound file can be configured which can be played based on the severity of the event
+
+**5.3.1.4.2** **Email:** Provision to send an email to a one or more of email ids as configured by the user. Email server and related services shall be provided by PGAD.
+
+### 5.3.1.5  Escalation
+
+The ICCT LNMS shall have the ability to escalate the faults based on several criteria similar to those mentioned with reference to filters. The user shall be able to configure the escalation policies wherein he/she can select and save the criteria along with the the associated actions to be executed as described in paragraph 5.3.1.4.
+
+### 5.3.1.6  Views/graphs
+
+**5.3.1.6.1** There shall be a provision to select and view the statistical graphs of the faults based on the selection criteria similar to the filters such as
+
+(a) Source
+
+(b) Severity
+
+(c) User acknowledgment status
+
+(d) Time window: defined, daily, weekly, monthly and quarterly
+
+(e) Range of IP addresses
+
+**5.3.1.6.2** Following views/graphs must be generated
+
+(a) Pie-chart
+
+-
+
+**Technical specifications**
+**[Restricted]**
+
+(b) Histograms (bar charts)
+
+(c) Point/line plots (showing the trends)
+
+### 5.3.1.7  Report generation
+
+
+The ICCT LNMS shall have the provision for generating reports and exporting the same as a Portable document format (PDF) document. The report generation shall be based on similar search and filtering criteria as mentioned in paragraph 5.3.1.6.
+
+### 5.3.1.8  Diagnostic tools
+
+ICCT LNMS shall have integrated user-interface to execute commonly used diagnostic tools such as
+
+**5.
+
+### 5.3.2.1.2
+
+An interactive wizard shall be provided to the user to select and define the discovery techniques and related parameters. Editable topological view shall be presented with various network elements and the interconnections. Appropriate symbols/icons shall be used for network elements and links. These icons can be user-configurable.
+
+### 5.3.2.1.3
+
+Provision for manual discovery shall be provided where the user selects the type of device and defines the related parameters needed.
+
+### 5.3.2.1.4
+
+For SNMP enabled devices, the LNMS shall automatically discover the device type and shall present the list of associated templates for performance monitoring. The user shall select the required templates/parameters to be monitored.
+
+### 5.3.2.2  Device inventory
+
+**5.3.2.2.1** The devices discovered shall be stored and maintained as an inventory.
+
+**5.3.2.2.2** The status of all the devices present in the inventory shall be tracked for any changes and updated accordingly.
+
+**5.3.2.2.3** Events shall be generated on any changes to the devices to notify the user.
+
+### 5.3.2.3  Configuration backup and restore
+
+**5.3.2.3.1** Backup of devices’ configuration shall be supported automatically (on a scheduled basis) as well as manually with user intervention.
+
+**5.3.2.3.2** Automatic back up and restoration need to be developed using SNMP or any other suitable protocol as supported by the devices.
+
+**5.3.2.3.3** The stored configuration can be restored onto the device either from the database or from a user supplied file.
+
+**5.3.2.3.4** A common format, preferably in XML, shall be defined for storing the configuration files.
+
+**5.3.2.3.5** Further, the user shall be provided with an interface for generation and uploading the configuration files for all the devices.
+
+### 5.3.2.4  Configuration interface/console
+
+**5.3.2.4.1** The user shall be provided with an intuitive and easy-to-use interface for device configuration. This interface shall abstract the underlying protocol being used for the configuration.
+
+**5.3.2.4.2** The user interface must have the following features
+
+(a) Confirmation for changing critical parameters
+
+(b) Display of valid range of the parameters
+
+(c) Warning on entering values beyond the defined thresholds
+
+(d) Invalid values should not be accepted by the fields
+
+(e) Acknowledgment after successful configuration of parameters
+
+### 5.3.2.5  Configuration protocols
+
+**5.3.2.5.1** The ICCT LNMS shall support the following protocols for configuration.
+
+(a) SNMP v1/v2c/v3
+
+(b) Telnet
+
+(c) SSH
+
+(d) TFTP, FTP, Secure file transfer protocol (SFTP)
+
+(e) Vendor specific protocols
+
+**5.3.2.5.2** A web-based interface shall be provided emulating the SSH or Telnet sessions for configuration of switches and routers.
+
+### 5.3.2.6  Cross-launch facility
+
+Certain devices in the ICCT may support web-based management interface. To leverage such interfaces, ICCT LNMS shall have provision for configuration and cross-launching of element management consoles over Hypertext transfer protocol (http)/Hypertext transfer protocol secure (https).
+
+### 5.3.2.7  Audit
+
+ICCT LNMS shall have the provision to log configuration activities performed by the user. Following parameters shall be included in the log data.
+
+**5.3.2.7.1** User-name
+
+**5.3.2.7.2** Device Id
+
+**5.3.2.7.3** Parameter(s) configured
+
+**5.3.2.7.4** Date and time of activity
+
+### 5.3.3  Performance management
+
+The ICCT LNMS shall have capability to poll, process, store, present and generate reports about the performance parameters of various subsystems and about the system as a whole. A set of generic and specific parameters will be defined and selected for monitoring as described in the following sub-sections.
+
+### 5.3.3.1  General parameters
+
+**5.3.3.1.1** Availability: The availability status of all the devices shall be monitored based on its response to a combination of one or more protocols including ICMP, UDP, TCP and SNMP. The user shall be notified about any change in the state as an event. In case of orderly shut down of the ICCT system, the ICCT LNMS shall have the provision to send shut down event to ICCT CNMS and remote ICCT LNMS. This condition may prevail when the ICCT is non-operational or under storage condition or on the move for an impending deployment.
+
+### 5.3.3.1.2
+
+MIB-2 (iso.org.dod.internet.mgmt.mib-2): Management variables under the MIB-II definition must be monitored for layer-2 and layer-3 SNMP enabled devices which include
+
+(a) Interface statistics
+
+(b) Protocol statistics
+
+### 5.3.3.1.3
+
+MIBs defined under MIB-2, which are applicable to any system or subsystem in ICCT such as UPS (UPS-MIB) shall be supported by ICCT LNMS for monitoring purpose. Standard templates for polling and graph generation for such MIBs shall be preloaded in the LNMS.
+
+### 5.3.3.2  Specific parameters
+
+**5.3.3.2.1** The ICCT LNMS shall have the provision to create polling and graph templates for specific parameters for each type of device based on their MIBs.
+
+**5.3.3.2.2** By default, the templates associated with a type of device shall be listed whenever such a device is added into LNMS.
+
+**5.3.3.2.3** During adding or while editing the device details, the user shall have the provision to select one or more parameters for monitoring.
+
+**5.3.3.2.4** In summary the user shall be able to perform the following activities
+
+(a) Creation and modification of templates for managed devices and its parameters
+
+(b) Selection of managed device
+
+(c) Selection of performance parameters
+
+### 5.3.3.3  Network time protocol (NTP)
+
+ICCT LNMS shall support monitoring of NTP status of selected nodes and store the statistical information for further analysis. Minimum statistical information consists of sync status, sync source, offset, jitter and delay.
+
+### 5.3.3.4  Netflow and IPFIX
+
+ICCT LNMS shall support processing and visualization of Netflow protocol and statistics with the following capabilities
+
+**5.3.3.4.1** Support for various Netflow versions: v5, v7 and v9 and IPFIX.
+
+**5.3.3.4.2** Provide historical trends for WAN and LAN bandwidth usage
+
+**5.3.3.4.3** Persistent storage of Netflow data for analysis
+
+**5.3.3.4.4** Generation of extensive graphs and reports based on user selected criteria such as
+
+(a) Top hosts
+
+(b) Protocols
+
+(c) Applications
+
+(d) Conversations
+
+
+5.3.3.4.5 Ability to detect and locate anomalies in the network traffic such as
+
+(a) Various network attacks
+(b) Denial of service (DoS) attacks
+(c) Infected by worms and virus
+
+5.3.3.4.6 Pinpointing the cause of network over-utilization and highlighting the IP addresses of the top talkers on the network
+
+5.3.3.5 Reports
+
+The ICCT LNMS as a part of performance management functionality shall be capable of generating reports about the above discussed parameters.
+
+5.3.4 Security management
+
+5.3.4.1 User authentication and authorization
+
+5.3.4.1.1 The ICCT LNMS shall provide creation, modification and deletion of users and associated privileges/roles with following features
+
+(a) Fine grained and extensible authorization including support for users, groups, roles, operations and views
+(b) Secure authentication and access control including time limited passwords
+(c) Auditing capabilities including log in time, source IP and operations performed shall be logged.
+
+5.3.4.1.2 User groups: A default set of user groups shall be configured as shown below.
+
+Group	Add/delete elements	Configuration of elements	Monitoring	User management	Backup	Restore
+System administrator	Y	Y	Y	Y	Y	Y
+Network administrator	N	Y	Y	N	Y	Y
+Network operator	N	N	Y	N	Y	Y
+
+5.3.4.1.3 Network device groups: Provision for creating network device groups shall be present through which the user creates different groups and adds devices to them based on certain criteria. A probable list of groups is shown below.
+
+Group	Description	Devices
+LAN	Consists of elements comprising the LAN segment of ICCT	Core routers, access switches etc
+Group	Description	Devices
+WAN	Consists of elements comprising the WAN segment of ICCT	Edge routers, satellite subsystems, LOS link subsystems etc
+Security	Consists of elements that provide network security	Intrusion protection system (IPS), bulk encryptor etc
+Power	Consists of elements related to power-supply	UPS etc
+
+5.3.4.2 Accounts and password management
+
+5.3.4.2.1 Only the system administrator shall be allowed to manage user groups, device groups and associated parameters. Any other user can only change their own password.
+
+5.3.4.2.2 At least, the following user parameters shall be managed
+
+(a) User name
+(b) Password
+(c) Associated groups
+(d) Per group privileges
+(e) Password expiry period
+
+5.3.4.3 Monitoring and logging
+
+The ICCT LNMS shall have full auditing capabilities which shall include at least the following events.
+
+5.3.4.3.1 Changes done by users
+
+5.3.4.3.2 Log in and log out times
+
+5.3.4.3.3 Login failures
+
+5.3.5 WebUI layout and views
+
+The ICCT LNMS shall have a web-based UI with the sample layouts as shown in figures 5.3 and 5.4.
+
+5.3.5.1 Menus and main console
+
+This shall include various sub-menus specific to each management function and related operations.
+
+5.3.5.2 Inventory
+
+This shall be a tree based view showing the inventory of the ICCT which includes the devices, interfaces etc. The user shall be able to select a device or an interface and drill down to the lowest possible level.
+
+             MENUS
+
+    ┌──────────────────────────────────────────┐
+    │                                          │
+    ├────────┬────────┬────────┬───────────────┤
+    │  TAB   │  TAB   │  TAB   │     TAB       │
+    ├────────┴────────┴────────┴───────────────┤
+    │                  │                       │
+    │   INVENTORY      │       TOPOLOGY        │
+    │   (TREE VIEW)    │                       │
+    │                  │                       │
+    ├──────────────────┴───────────────────────┤
+    │                                          │
+    │              EVENTS / ALARMS             │
+    │                                          │
+    ├──────────────────────────────────────────┤
+    │                 SUMMARY                  │
+    └──────────────────────────────────────────┘
+
+
+Figure 5.3: ICCT LNMS WebUI sample layout
+
+5.3.5.3 Topology
+
+This portion of the layout shall support presentation of various forms of topology as listed below.
+
+5.3.5.3.1 Physical network topology: Provides visual representation of the network as discovered by the ICCT LNMS comprising of layer-2, layer-3 switches, edge routers, end-points and interface details. The topology shall be updated in real-time showing the availability and reachability of all the nodes in the topology. The update rate shall be user configurable.
+
+5.3.5.3.2 Rack view topology: Provides visual representation of the racks and the status of respective devices installed in them.
+
+5.3.5.3.3 ICCTs network topology: Provides visual representation of various communication links among ICCTs and their current operational status in real-time. ICCT shall be represented using appropriate color codes based on the health and link availability.
+
+5.3.5.3.4 Geographical topology: ICCTs network topology shall be overlayed on a digital map indicating the current location and operational status of ICCTs. The position at 
+each ICCT shall be fetched from the GNSS clock located in the ICCT and the same shall be reported to remote ICCT LNMS for display on the map.
+
+5.3.5.4 Events and alarms
+
+Critical events/alarms shall be summarized and presented in this area.
+
+
+
+
+---
+
+### 5.3.5.5 Summary
+
+This shall display the brief information regarding the following parameters
+
+**5.3.5.5.1 System status:** Resources utilized including Random access memory (RAM), CPU and disk space
+
+**5.3.5.5.2 Current active link with the NOC(s)**
+
+**5.3.5.5.3 Current logged in user(s)**
+
+### 5.3.5.6 Dashboard
+
+The ICCT LNMS shall have provision of a customizable dashboard, which presents a bird’s-eye view of the overall network health with customizable widgets providing real-time statistics of critical parameters/metrics such as CPU load, availability, real-time utilization graphs of critical network resources, list of critical alarms/events, rate of events/alarms reported/processed by LNMS, inventory, top-talkers and any other Service level agreement (SLA) widgets.
+
+**Figure 5.4: ICCT LNMS WebUI sample layout**
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│   TAB        TAB        TAB        TAB        TAB           │
+├───────────────┬─────────────────────────────────────────────┤
+│               │                                             │
+│ MAIN CONSOLE  │              DASHBOARD                      │
+│               │                                             │
+│               │     [Pie Chart]     [Line Graph]            │
+│               │                                             │
+│               │     [Line Graph]    [Pie Chart]             │
+│               │                                             │
+│               │              [Line Graph]                   │
+├───────────────┴─────────────────────────────────────────────┤
+│                    EVENTS / ALARMS                          │
+├─────────────────────────────────────────────────────────────┤
+│                         SUMMARY                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 5.3.6 Reports and Logging
+
+The details of events and related information have been discussed in the respective management function.
+
+### 5.3.6.1 Reporting methodology
+
+**5.3.6.1.1** The reporting of events and other information from ICCT LNMS to CNMS at NOC should be configurable by the administrators.
+
+**5.3.6.1.2** Administrators can configure either the main or the alternate method of reporting or parallel reporting as explained below.
+
+**(a) Parallel mode:** In this mode ICCT LNMS shall send the status information to main and standby CNMS located at different NOCs.
+
+**(b) Main / Standby mode:** In this mode ICCT LNMS shall send the status information to only the main CNMS (at one of the NOCs). In case of failure of the main NOC, the ICCT LNMS shall send the status information to the standby CNMS at another NOC. The ICCT LNMS shall detect the availability of the main and standby links to the NOCs through periodic polling.
+
+**5.3.6.1.3** The ICCT LNMS shall have the feature of scheduling automatic generation of the reports based on user defined periodicity and features.
+
+### 5.3.6.2 Interaction with CNMS
+
+**5.3.6.2.1** The CNMS, as discussed earlier, primarily monitors the health of remote ICCTs presenting the current status, alarms and topological view showing the connectivity between remote ICCTs. Both Push and pull techniques shall be used for exchanging information between CNMS and various LNMS.
+
+**(a) Push-mode** shall be used for forwarding of SNMP Traps, alarm and events (configurable using filters)
+
+**(b) Pull-mode (On demand)** shall be used for consolidated health status of ICCT, inventory, configuration information of ICCT and its subsystems etc.
+
+**5.3.6.2.2** The information shall be exchanged using SNMP, XML or JavaScript Object Notation (JSON). If SNMP is used a new MIB shall be written defining the ICCT health status and custom traps for monitoring and notification.
+
+### 5.3.6.3 Interaction with remote ICCT LNMS
+
+**5.3.6.3.1** The ICCT LNMS shall share its health status with LNMS at remote ICCTs. This shall enable availability of consolidated health status of all ICCTs at each LNMS.
+
+**5.3.6.3.2** The health information shall be shared efficiently among ICCTs either through multicast or broadcast to a unique virtual IP address, which shall be translated and forwarded to respective ICCT LNMS upon reception.
+
+**5.3.6.3.3** The message format for exchange of health status between LNMS of various ICCTs shall be proposed by the industry partner for review and approval by PGAD.
+
+### 5.4 Scope of Work for CNMS
+
+This section addresses the scope of work for the CNMS with detailed specification of the requirements. The CNMS design shall follow FCAPS management model, the details of which are provided in the following subsections.
+
+### 5.4.1 Fault management
+
+The CNMS shall receive the events such as SNMP traps, alarms, consolidated health status from multiple ICCT LNMS and display detailed information associated with them.
+
+A standard message format shall be proposed by the industry partner for review and approval by PGAD. The approved message format shall be used for exchange of events between ICCT LNMS and CNMS. It shall be capable of receiving and processing a minimum of 2500 events/s.
+
+### 5.4.1.1 Fault management console
+
+**5.4.1.1.1** Fault management console shall be comprehensive and configurable as per the user requirements. It shall allow the user to view events in real time providing an interface for acknowledging, servicing and annotating them.
+
+**5.4.1.1.2** Detailed information about event must be displayed in real time including
+
+**(a)** ICCT identity and description
+
+**(b)** Source information including IP Address for IP enabled devices and/or name as well as type of network element/model/serial number
+
+**(c)** Date and time-stamp
+
+**(d)** Severity with configurable color code
+
+**(e)** Generic and detailed description specific to the event
+
+**(f)** Possible help information describing corrective action to be taken by the user
+
+**(g)** User acknowledgment status
+
+**5.4.1.1.3** There shall be a provision for configuring the filters for alarms display based on the combination of one or more of the following parameters
+
+**(a)** ICCT ID
+
+**(b)** Source (as mentioned above)
+
+**(c)** Time window
+
+**(d)** Severity
+
+**(e)** User acknowledgment status
+
+### 5.4.1.2 Actions
+
+**5.4.1.2.1** The CNMS, apart from displaying the fault shall support the following actions when a fault occurs
+
+**(a) Audio:** A unique tune or sound file can be configured which can be played based on the fault
+
+**(b) Email:** An email must be sent to the administrator/operator
+
+**(c) SMS:** A short message may be sent to the administrator/operator’s mobile phone via Short message service (SMS)
+
+### 5.4.1.2.2
+
+The user shall be able to configure the above actions as per the requirements.
+
+### 5.4.1.3 Escalation
+
+**5.4.1.3.1** The ICCT CNMS shall have the ability to escalate the faults based on several criteria similar to those mentioned about filters.
+
+**5.4.1.3.2** The user shall be able to configure the escalation policies wherein he can select and save the criteria and the associated actions described in the above section.
+
+### 5.4.1.4 Views and graphs
+
+**5.4.1.4.1** There shall be a provision to select and view the statistical graphs of the faults based on the selection criteria similar to the filters such as
+
+**(a)** ICCT
+
+**(b)** Source
+
+**(c)** Severity
+
+**(d)** User acknowledgment status
+
+**(e)** Time window: defined, daily, weekly, monthly and quarterly
+
+**(f)** Range of IP addresses
+
+**5.4.1.4.2** Following views/graphs shall be generated:
+
+**(a)** Pie-chart
+
+**(b)** Histograms (Bar charts)
+
+**(c)** Point/line plots (showing the trends)
+
+### 5.4.1.5 Report generation
+
+**5.4.1.5.1** The CNMS shall have the capability of generating various reports based on several criteria as selected by the user.
+
+**5.4.1.5.2** The generated reports can be exported to either PDF or Open document format (ODF).
+
+### 5.4.1.6 Diagnostic tools
+
+**5.4.1.6.1** Diagnostic and testing tools must be provided with integrated user-interface to help user carryout specific tests on the devices and/or the network.
+
+**5.4.1.6.2** At least the following tools shall be supported
+
+**(a)** Traceroute
+
+**(b)** Ping
+
+**(c)** ARP
+
+**(d)** Tools for bandwidth testing (iperf, pathchar, netperf etc)
+
+---
+
+### 5.4.2 Configuration management
+
+### 5.4.2.1 Cross-launching for configuration activities
+
+The CNMS shall cross-launch the ICCT LNMS for any configuration activities.
+
+### 5.4.2.2 ICCT inventory
+
+**5.4.2.2.1** The CNMS shall maintain the list of available ICCTs and their inventory.
+
+**5.4.2.2.2** The status of all the ICCTs and respective inventories shall be tracked for any changes and updated accordingly.
+
+**5.4.2.2.3** Events shall be generated on any changes in ICCT inventory to notify the user.
+
+### 5.4.2.3 Configuration backup and restore
+
+**5.4.2.3.1** Provision for taking backup of ICCT configuration comprising the devices configuration must be provided at the CNMS. This can be carried out either automatically on a scheduled basis or manually with the user intervention.
+
+**5.4.2.3.2** The stored configuration can be restored onto the ICCT either from the database or from a user supplied file. A common configuration template either in XML or JSON format has to be defined for storing the configuration files. The user must be provided with an interface for generating and uploading the configuration files for all the ICCTs. The configuration file format shall be proposed by the industry partner for review and approval by PGAD.
+
+### 5.4.2.4 Configuration interface/console
+
+The user shall be provided with an intuitive and easy-to-use interface for ICCT configuration. On selecting the ICCT, the respective ICCT LNMS shall be cross-launched through which the user can view and carry out the configuration changes.
+
+### 5.4.2.5 Audit
+
+All the configuration activity performed by the user must be logged for further analysis and report generation.
+
+### 5.4.3 Performance management
+
+**5.4.3.1** The CNMS shall receive the performance reports from all the ICCTs through their respective LNMS either on-demand or on a scheduled basis.
+
+**5.4.3.2** The received performance reports shall be
+ exported to the a central database or storage facility for further analysis.
+
+**5.4.3.3** The CNMS shall be capable of presenting and generating reports on the performance parameters of ICCTs and its subsystems
+
+
+
+before answer first make unit testing (must work in linux rhel 9.4 system .)

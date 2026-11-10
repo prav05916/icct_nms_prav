@@ -1,0 +1,7 @@
+ICCT Inventory & Protocol Integration 1.0.0
+- Device Type catalogue seeded from the updated ICCT LNMS client device list.
+- Cacti host table remains authoritative for actual devices and live status.
+- Adds Actual Device metadata, Segment mapping, FCAPS/OID mapping, Protocol Diagnostics and Audit Log.
+- Includes offline RHEL protocol setup/testing guide for SNMP, Syslog, SSH, HTTP/HTTPS and NTP.
+- Adds LLDP/CDP validation through SNMP OID walks as an optional topology test.
+- Zero external PHP/JS dependency and no Cacti core file modification.

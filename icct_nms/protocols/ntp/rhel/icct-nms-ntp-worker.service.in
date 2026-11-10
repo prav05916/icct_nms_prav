@@ -1,0 +1,14 @@
+[Unit]
+Description=ICCT NMS NTP monitoring worker
+After=network.target mariadb.service
+PartOf=icct-nms-ntp-worker.timer
+
+[Service]
+Type=oneshot
+User=@@WEB_USER@@
+Group=@@WEB_GROUP@@
+ExecStart=/usr/bin/php @@CACTI_ROOT@@/plugins/icct_nms/protocols/ntp/cli/ntp_worker.php --limit=500
+StandardOutput=journal
+StandardError=journal
+TimeoutSec=45
+

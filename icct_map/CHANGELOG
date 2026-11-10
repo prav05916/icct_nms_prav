@@ -1,0 +1,12 @@
+ICCT India Geographic Topology 1.6.0
+- Fix Cacti 1.2.30 Sites query: removed non-existent sites.disabled column
+- Viewer now reads all native Cacti Sites and host.site_id relationships directly
+- Prevent duplicate/overlapping permanent state labels
+- Adaptive state labels: large states at overview, smaller states when zoomed in
+- Cleaner India-only presentation with hover state labels
+- Drag-to-pan, wheel/pinch zoom, Fit India, Compact and Maximize/Restore controls
+- Collapsible site details panel
+- Preserve map viewport during AJAX health refresh
+- Settings page full-page refresh disabled correctly
+- Runtime page full-page refresh disabled correctly
+- New versioned CSS/JS asset names to avoid stale browser cache
