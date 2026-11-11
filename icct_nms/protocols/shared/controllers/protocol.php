@@ -161,6 +161,8 @@ try {
                 "syslog" => "Syslog",
                 "diagnostics" => "Device diagnostics",
                 "discovery" => "Discovery",
+                "ntp" => "NTP",
+                "netflow" => "NetFlow",
             ];
             $action = $_POST["action"];
             $protocolName = ($_POST["protocol"] ?? "") === "serial"

@@ -34,7 +34,7 @@ $netflowHelp = static function($label, $help) { ?>
     icct_nms_select(
         'NetFlow Version',
         'flow_version',
-        [9 => 'NetFlow v9', 5 => 'NetFlow v5', 10 => 'IPFIX (v10)'],
+        [9 => 'NetFlow v9', 7 => 'NetFlow v7', 5 => 'NetFlow v5', 10 => 'IPFIX (v10)'],
         $netflow['flow_version'] ?? 9
     );
     icct_nms_input(

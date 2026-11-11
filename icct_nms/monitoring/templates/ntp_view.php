@@ -109,8 +109,8 @@ function icct_nms_ntp_offset_class(?float $offset): string {
 <div style="margin-top:16px;padding:12px;background:#f9f9f9;border:1px solid #ddd;border-radius:6px">
     <h3 style="margin:0 0 8px 0">Reports & Export</h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="?export=csv" class="ui-button ui-corner-all">Export CSV</a>
-        <a href="?export=json" class="ui-button ui-corner-all">Export JSON</a>
+        <a href="monitoring/controllers/ntp.php?export=csv" class="ui-button ui-corner-all">Export CSV</a>
+        <a href="monitoring/controllers/ntp.php?export=json" class="ui-button ui-corner-all">Export JSON</a>
     </div>
 </div>
 

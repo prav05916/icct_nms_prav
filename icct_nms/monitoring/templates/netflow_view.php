@@ -287,13 +287,13 @@ $overUtil      = icct_nms_netflow_overutilization_analysis(0);
 <h2>Reports & Export</h2>
 <p>Export NetFlow data as CSV or JSON for further analysis.</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-    <a href="?export=csv&type=top_hosts" class="ui-button ui-corner-all">CSV: Top Hosts</a>
-    <a href="?export=csv&type=protocols" class="ui-button ui-corner-all">CSV: Protocols</a>
-    <a href="?export=csv&type=applications" class="ui-button ui-corner-all">CSV: Applications</a>
-    <a href="?export=csv&type=conversations" class="ui-button ui-corner-all">CSV: Conversations</a>
-    <a href="?export=csv&type=trends" class="ui-button ui-corner-all">CSV: WAN/LAN Trends</a>
-    <a href="?export=csv&type=anomalies" class="ui-button ui-corner-all">CSV: Anomalies</a>
-    <a href="?export=json" class="ui-button ui-corner-all">Full JSON Report</a>
+    <a href="monitoring/controllers/netflow.php?export=csv&type=top_hosts" class="ui-button ui-corner-all">CSV: Top Hosts</a>
+    <a href="monitoring/controllers/netflow.php?export=csv&type=protocols" class="ui-button ui-corner-all">CSV: Protocols</a>
+    <a href="monitoring/controllers/netflow.php?export=csv&type=applications" class="ui-button ui-corner-all">CSV: Applications</a>
+    <a href="monitoring/controllers/netflow.php?export=csv&type=conversations" class="ui-button ui-corner-all">CSV: Conversations</a>
+    <a href="monitoring/controllers/netflow.php?export=csv&type=trends" class="ui-button ui-corner-all">CSV: WAN/LAN Trends</a>
+    <a href="monitoring/controllers/netflow.php?export=csv&type=anomalies" class="ui-button ui-corner-all">CSV: Anomalies</a>
+    <a href="monitoring/controllers/netflow.php?export=json" class="ui-button ui-corner-all">Full JSON Report</a>
 </div>
 </div>
 
