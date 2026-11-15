@@ -1,6 +1,10 @@
 <?php
 /** Native parser/template QA in connection-local temporary tables. No persistent templates or hosts. */
 if(PHP_SAPI!=='cli')exit(1);
+if (!file_exists('/var/www/html/cacti/include/cli_check.php')) {
+    echo "SKIP: Live Cacti integration tests run inside RHEL /var/www/html/cacti environment.\n";
+    exit(0);
+}
 define('IN_CACTI_INSTALL',true);require '/var/www/html/cacti/include/cli_check.php';api_plugin_load_realms();require_once $config['base_path'].'/lib/auth.php';
 require_once __DIR__ . '/../../shared/services/bootstrap.php';icct_nms_backend();require_once __DIR__ . '/../../presets/services/device_type_service.php';require_once __DIR__ . '/../../protocols/snmp/mibs/services/mib_repository_service.php';
 require_once __DIR__.'/../../protocols/snmp/mibs/services/mib_browser_service.php';

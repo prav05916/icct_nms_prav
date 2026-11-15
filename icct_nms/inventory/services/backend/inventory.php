@@ -1,7 +1,7 @@
 <?php
+
 /** ICCT-owned inventory services, derived from the existing ICCT NMS implementation. */
 
-/** Reused Inventory service: collect inventory values. */
 function icct_backend_collect_inventory_values($only_host_id = 0)
 {
     global $config, $snmp_error;
@@ -24,7 +24,7 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
 		INNER JOIN plugin_icct_nms_snmprec_oids AS o ON o.import_id = i.id AND o.inventory_key != ''
 		WHERE h.poller_id = ? AND h.deleted = '' AND h.disabled = ''$host_filter
 		ORDER BY h.id, o.inventory_key, i.id DESC, o.id",
-        $params
+        $params,
     );
     $seen = [];
     $attempted = 0;
@@ -35,7 +35,7 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
         (float) $snmp_retries > PHP_INT_MAX
     ) {
         throw new RuntimeException(
-            'ICCT NMS inventory requires valid native Cacti SNMP retries; no private retry default was used.'
+            'ICCT NMS inventory requires valid native Cacti SNMP retries; no private retry default was used.',
         );
     }
     $snmp_retries = (int) $snmp_retries;
@@ -54,19 +54,19 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
             $error =
                 'SNMP is disabled on this Cacti device; live inventory polling was not attempted.';
             icct_backend_category_execute(
-                "INSERT INTO plugin_icct_nms_device_inventory
-				(host_id, inventory_key, oid, display_name, status, last_attempt, last_error)
-				VALUES (?, ?, ?, ?, ?, NOW(), ?)
-				ON DUPLICATE KEY UPDATE oid = VALUES(oid), display_name = VALUES(display_name),
-					status = VALUES(status), last_attempt = NOW(), last_error = VALUES(last_error)",
+                "INSERT INTO plugin_icct_nms_device_inventory\n\t\t\t\t(host_id, inventory_key, oid, " .
+                    "display_name, status, last_attempt, last_error)\n\t\t\t\tVALUES (?, ?, ?, ?, ?, NOW(), " .
+                    "?)\n\t\t\t\tON DUPLICATE KEY UPDATE oid = VALUES(oid), display_name = " .
+                    "VALUES(display_name),\n\t\t\t\t\tstatus = VALUES(status), last_attempt = NOW(), " .
+                    'last_error = VALUES(last_error)',
                 [
                     $definition['host_id'],
                     $definition['inventory_key'],
                     $definition['oid'],
                     $display_name,
                     $state,
-                    $error
-                ]
+                    $error,
+                ],
             );
             continue;
         }
@@ -88,7 +88,7 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
             $snmp_retries,
             'ICCT NMS Inventory',
             $definition['snmp_engine_id'],
-            SNMP_STRING_OUTPUT_ASCII
+            SNMP_STRING_OUTPUT_ASCII,
         );
 
         if (icct_backend_inventory_snmp_failed($value)) {
@@ -99,18 +99,18 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
                 $definition['oid'] .
                 '. Check the endpoint, credentials and protocol configured in Cacti.';
             icct_backend_category_execute(
-                "INSERT INTO plugin_icct_nms_device_inventory
-				(host_id, inventory_key, oid, display_name, status, last_attempt, last_error)
-				VALUES (?, ?, ?, ?, 'failed', NOW(), ?)
-				ON DUPLICATE KEY UPDATE oid = VALUES(oid), display_name = VALUES(display_name),
-					status = 'failed', last_attempt = NOW(), last_error = VALUES(last_error)",
+                "INSERT INTO plugin_icct_nms_device_inventory\n\t\t\t\t(host_id, inventory_key, oid, " .
+                    "display_name, status, last_attempt, last_error)\n\t\t\t\tVALUES (?, ?, ?, ?, 'failed', " .
+                    "NOW(), ?)\n\t\t\t\tON DUPLICATE KEY UPDATE oid = VALUES(oid), display_name = " .
+                    "VALUES(display_name),\n\t\t\t\t\tstatus = 'failed', last_attempt = NOW(), last_error = " .
+                    'VALUES(last_error)',
                 [
                     $definition['host_id'],
                     $definition['inventory_key'],
                     $definition['oid'],
                     $display_name,
-                    substr($error, 0, 255)
-                ]
+                    substr($error, 0, 255),
+                ],
             );
             continue;
         }
@@ -119,7 +119,7 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
         $current = db_fetch_row_prepared(
             'SELECT baseline_value, observed_value
 			FROM plugin_icct_nms_device_inventory WHERE host_id = ? AND inventory_key = ?',
-            [$definition['host_id'], $definition['inventory_key']]
+            [$definition['host_id'], $definition['inventory_key']],
         );
         $baseline = cacti_sizeof($current) ? trim((string) $current['baseline_value']) : '';
         if ($baseline === '') {
@@ -127,13 +127,12 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
         }
         $status = strcasecmp($baseline, $value) === 0 ? 'ok' : 'changed';
         icct_backend_category_execute(
-            "INSERT INTO plugin_icct_nms_device_inventory
-			(host_id, inventory_key, oid, display_name, baseline_value, observed_value,
-			 status, last_attempt, last_success, last_error)
-			VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), '')
-			ON DUPLICATE KEY UPDATE oid = VALUES(oid), display_name = VALUES(display_name),
-				baseline_value = VALUES(baseline_value), observed_value = VALUES(observed_value),
-				status = VALUES(status), last_attempt = NOW(), last_success = NOW(), last_error = ''",
+            "INSERT INTO plugin_icct_nms_device_inventory\n\t\t\t(host_id, inventory_key, oid, " .
+                "display_name, baseline_value, observed_value,\n\t\t\t status, last_attempt, last_success, " .
+                "last_error)\n\t\t\tVALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), '')\n\t\t\tON DUPLICATE KEY " .
+                "UPDATE oid = VALUES(oid), display_name = VALUES(display_name),\n\t\t\t\tbaseline_value = " .
+                "VALUES(baseline_value), observed_value = VALUES(observed_value),\n\t\t\t\tstatus = " .
+                "VALUES(status), last_attempt = NOW(), last_success = NOW(), last_error = ''",
             [
                 $definition['host_id'],
                 $definition['inventory_key'],
@@ -141,8 +140,8 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
                 $display_name,
                 $baseline,
                 $value,
-                $status
-            ]
+                $status,
+            ],
         );
     }
 
@@ -152,7 +151,6 @@ function icct_backend_collect_inventory_values($only_host_id = 0)
     return $attempted;
 }
 
-/** Reused Inventory service: inventory collector id. */
 function icct_backend_inventory_collector_id()
 {
     global $config, $poller_id;
@@ -163,29 +161,28 @@ function icct_backend_inventory_collector_id()
         (float) $id > 4294967295
     ) {
         throw new RuntimeException(
-            'ICCT NMS inventory requires the native Cacti collector identity. No device was probed.'
+            'ICCT NMS inventory requires the native Cacti collector identity. No device was probed.',
         );
     }
     // A CLI --poller override must not pretend that this process moved to another host.
     if (isset($poller_id) && (string) $poller_id !== (string) $id) {
         throw new RuntimeException(
-            'ICCT NMS inventory collector override differs from the configured process identity. Run collection on the assigned collector.'
+            'ICCT NMS inventory collector override differs from the configured process identity. Run collection on the assigned collector.',
         );
     }
     if (
         !(int) db_fetch_cell_prepared(
             "SELECT COUNT(*) FROM poller WHERE id = ? AND disabled = ''",
-            [(int) $id]
+            [(int) $id],
         )
     ) {
         throw new RuntimeException(
-            'ICCT NMS inventory collector is missing or disabled in Cacti. No device was probed.'
+            'ICCT NMS inventory collector is missing or disabled in Cacti. No device was probed.',
         );
     }
     return (int) $id;
 }
 
-/** Reused Inventory service: inventory snmp failed. */
 function icct_backend_inventory_snmp_failed($value)
 {
     $value = trim((string) $value);

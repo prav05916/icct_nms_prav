@@ -1,7 +1,7 @@
 <?php
+
 /** ICCT-owned discovery endpoints services, derived from the existing ICCT NMS implementation. */
 
-/** Reused Inventory service: nd mac. */
 function icct_backend_nd_mac($bytes)
 {
     if (strlen($bytes) !== 6) {
@@ -10,7 +10,6 @@ function icct_backend_nd_mac($bytes)
     return implode(':', str_split(bin2hex($bytes), 2));
 }
 
-/** Reused Inventory service: nd parse arp. */
 function icct_backend_nd_parse_arp($values, $interfaces)
 {
     $root = '1.3.6.1.2.1.4.22.1';
@@ -46,7 +45,7 @@ function icct_backend_nd_parse_arp($values, $interfaces)
             'type' => $type,
             'address_family' => 4,
             'scope_id' => 0,
-            'source' => 'ipNetToMediaTable'
+            'source' => 'ipNetToMediaTable',
         ];
     }
     $root = '1.3.6.1.2.1.4.35.1';
@@ -68,7 +67,7 @@ function icct_backend_nd_parse_arp($values, $interfaces)
         4 => 'Probe',
         5 => 'Invalid',
         6 => 'Unknown',
-        7 => 'Incomplete'
+        7 => 'Incomplete',
     ];
     foreach (array_keys($indices) as $index) {
         $row = icct_backend_nd_physical_index($index);
@@ -102,7 +101,7 @@ function icct_backend_nd_parse_arp($values, $interfaces)
             'state' => $mac !== '' ? 'observed' : 'unresolved',
             'type' => $type,
             'neighbor_state' => $states[$state],
-            'source' => 'ipNetToPhysicalTable'
+            'source' => 'ipNetToPhysicalTable',
         ];
     }
     return [
@@ -110,11 +109,12 @@ function icct_backend_nd_parse_arp($values, $interfaces)
         'neighbors' => [],
         'endpoints' => array_values($rows),
         'scope' =>
-            'IPv4 ARP and IPv4/IPv6 IP-MIB neighbour tables in the configured SNMP context. Empty tables may be unsupported, excluded by the SNMP view, or have no entries. Link-local addresses are scoped to the reporting interface.'
+            'IPv4 ARP and IPv4/IPv6 IP-MIB neighbour tables in the configured SNMP context. Empty ' .
+            'tables may be unsupported, excluded by the SNMP view, or have no entries. Link-local ' .
+            'addresses are scoped to the reporting interface.',
     ];
 }
 
-/** Reused Inventory service: nd parse fdb. */
 function icct_backend_nd_parse_fdb($values, $interfaces)
 {
     $base = '1.3.6.1.2.1.17';
@@ -174,7 +174,7 @@ function icct_backend_nd_parse_fdb($values, $interfaces)
                 'vlans' => array_values($vlans[(string) $fdb] ?? []),
                 'source' => $source,
                 'status' => $status,
-                'state' => $status === 3 && $ifindex > 0 ? 'inferred' : 'unresolved'
+                'state' => $status === 3 && $ifindex > 0 ? 'inferred' : 'unresolved',
             ];
         }
     }
@@ -194,11 +194,11 @@ function icct_backend_nd_parse_fdb($values, $interfaces)
         'neighbors' => [],
         'endpoints' => $rows,
         'scope' =>
-            'Configured SNMP context only. Learned ports may be uplinks or aggregate interfaces; physical members are not inferred. Empty tables do not prove support.'
+            'Configured SNMP context only. Learned ports may be uplinks or aggregate interfaces; ' .
+            'physical members are not inferred. Empty tables do not prove support.',
     ];
 }
 
-/** Reused Inventory service: nd physical index. */
 function icct_backend_nd_physical_index($index)
 {
     if (!preg_match('/^[0-9]+(?:\.[0-9]+)+$/D', $index)) {
@@ -232,6 +232,6 @@ function icct_backend_nd_physical_index($index)
         'ifindex' => $ifindex,
         'ip' => $ip,
         'address_family' => $type === 1 || $type === 3 ? 4 : 6,
-        'scope_id' => $zone
+        'scope_id' => $zone,
     ];
 }

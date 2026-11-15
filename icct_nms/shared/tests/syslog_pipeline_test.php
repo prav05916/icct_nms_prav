@@ -22,7 +22,9 @@ function db_execute_prepared($sql,$args){
 }
 require __DIR__.'/../../protocols/syslog/services/backend/syslog.php';
 function sp_check($ok,$msg){if(!$ok)throw new RuntimeException($msg);}
-$f=tempnam(sys_get_temp_dir(),'icct_syslog_');
+// Use the test directory itself for the spool file so it is readable inside sandboxed environments (Windows dev).
+// On RHEL production the actual spool is /var/log/icct-nms/remote.ndjson which is always accessible.
+$f = __DIR__ . DIRECTORY_SEPARATOR . 'icct_syslog_pipeline_' . getmypid() . '.tmp';
 $base=['hostname'=>'router1','input_name'=>'icct-udp','program'=>'ICCTTEST','facility'=>'local0','facility_code'=>16,'severity'=>'err','severity_code'=>3,'timestamp'=>'2026-10-12T12:00:00Z'];
 $lines=[array_merge($base,['source_ip'=>'192.0.2.10','message'=>'Interface down']),array_merge($base,['source_ip'=>'192.0.2.10','message'=>'Interface down']),array_merge($base,['source_ip'=>'192.0.2.99','message'=>'Unknown sender']),'{bad json',array_merge($base,['source_ip'=>'192.0.2.10','severity'=>'warning','severity_code'=>4,'message'=>'UPS battery low'])];
 $payload='';foreach($lines as $l)$payload.=(is_array($l)?json_encode($l):$l)."\n";file_put_contents($f,$payload);

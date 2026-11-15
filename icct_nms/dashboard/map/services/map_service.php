@@ -1,10 +1,54 @@
 <?php
 /** Geographic topology uses native Cacti sites and this plugin's permitted inventory. */
-function icct_nms_map_coordinates($latitude, $longitude) {
-    if (!is_numeric($latitude) || !is_numeric($longitude)) return null;
-    $lat=(float)$latitude; $lon=(float)$longitude;
-    if (!is_finite($lat) || !is_finite($lon) || abs($lat)>90 || abs($lon)>180 || ($lat==0 && $lon==0)) return null;
-    return [$lat,$lon];
+if (!function_exists('icct_nms_map_coordinates')) {
+    function icct_nms_map_coordinates($latitude, $longitude) {
+        if (!is_numeric($latitude) || !is_numeric($longitude)) return null;
+        $lat=(float)$latitude; $lon=(float)$longitude;
+        if (!is_finite($lat) || !is_finite($lon) || abs($lat)>90 || abs($lon)>180 || ($lat==0 && $lon==0)) return null;
+        return [$lat,$lon];
+    }
+}
+if (!function_exists('icct_nms_map_fallback_coordinates')) {
+    function icct_nms_map_fallback_coordinates($siteName, $city, $state, $siteId = 0) {
+        static $cityCache = null;
+        if ($cityCache === null) {
+            $path = dirname(__DIR__) . '/data/india-cities.json';
+            $cityCache = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+        }
+        $searchTerms = array_filter([$city, $siteName, $state]);
+        if (!empty($cityCache)) {
+            foreach ($searchTerms as $term) {
+                $t = trim(strtolower((string)$term));
+                if ($t === '') continue;
+                foreach ($cityCache as $c) {
+                    if (strtolower($c['name']) === $t) {
+                        return [(float)$c['lat'], (float)$c['lon']];
+                    }
+                }
+            }
+            foreach ($searchTerms as $term) {
+                $t = trim(strtolower((string)$term));
+                if (strlen($t) < 3) continue;
+                foreach ($cityCache as $c) {
+                    if (stripos($t, strtolower($c['name'])) !== false || stripos(strtolower($c['name']), $t) !== false) {
+                        return [(float)$c['lat'], (float)$c['lon']];
+                    }
+                }
+            }
+            if ($state) {
+                $st = trim(strtolower((string)$state));
+                foreach ($cityCache as $c) {
+                    if (strtolower($c['state'] ?? '') === $st) {
+                        return [(float)$c['lat'], (float)$c['lon']];
+                    }
+                }
+            }
+            $hash = abs((int)crc32((string)$siteName . (string)$siteId));
+            $idx = $hash % count($cityCache);
+            return [(float)$cityCache[$idx]['lat'], (float)$cityCache[$idx]['lon']];
+        }
+        return [28.6139, 77.2090];
+    }
 }
 function icct_nms_map_metrics($readings) {
     $cpu=$readings['cpu_percent'] ?? $readings['5min_cpu'] ?? null;
@@ -294,4 +338,69 @@ function icct_nms_map_site_summary($site) {
     $state=icct_nms_map_site_state_from_counts($counts);
     return ['id'=>(int)$site['id'],'name'=>$site['name'],'coordinates'=>$site['coordinates'],'location'=>$site['location'] ?? '',
         'counts'=>$counts,'fault_counts'=>$alarms,'status'=>$state];
+}
+
+/** Project active alarms for a device into dashboard count, alarm summary and list. */
+function icct_nms_dashboard_alarm_data($id)
+{
+    if (!function_exists('icct_nms_alarm_rows')) {
+        $alarmFile = dirname(__DIR__, 3) . '/alarms/services/alarm_service.php';
+        if (file_exists($alarmFile)) {
+            require_once $alarmFile;
+        }
+    }
+    $rows = function_exists('icct_nms_alarm_rows') ? icct_nms_alarm_rows() : [];
+    $counts = array_fill_keys(['Critical', 'Major', 'Minor', 'Warning', 'Information'], 0);
+    $faultAlarms = [];
+    $rank = ['Information' => 1, 'Minor' => 2, 'Warning' => 3, 'Major' => 4, 'Critical' => 5];
+    $highest = 0;
+    $highestAlarm = null;
+
+    $matched = false;
+    foreach ($rows as $alarm) {
+        if ((int) ($alarm['host_id'] ?? 0) !== (int) $id) {
+            continue;
+        }
+        $matched = true;
+        if (($alarm['state'] ?? '') !== 'Active') {
+            continue;
+        }
+        $sev = $alarm['severity'] ?? 'Information';
+        if (isset($counts[$sev])) {
+            $counts[$sev]++;
+        }
+        $faultAlarms[] = [
+            'name' => trim((string) ($alarm['name'] ?? '')) ?: ($alarm['description'] ?? 'Alarm'),
+            'severity' => $sev,
+            'source' => $alarm['source'] ?? 'Alarm',
+            'time' => (int) ($alarm['occurred_epoch'] ?? 0),
+            'value' => $alarm['description'] ?? '',
+            'graph' => $alarm['description'] ?? '',
+            'graph_id' => (int) ($alarm['graph_id'] ?? 0),
+            'corrective_action' => $alarm['fix'] ?? '',
+        ];
+        if (($rank[$sev] ?? 0) > $highest) {
+            $highest = $rank[$sev];
+            $highestAlarm = [
+                'severity' => $sev,
+                'message' => (($alarm['name'] ?? '') ?: 'Alarm') . ' — ' . ($alarm['description'] ?? ''),
+            ];
+        }
+    }
+
+    if (!$matched && function_exists('icct_nms_fault_observations')) {
+        $obs = icct_nms_fault_observations(['id' => (int)$id]);
+        foreach ($obs as $o) {
+            $st = $o['state'] ?? 'Information';
+            if (isset($counts[$st])) {
+                $counts[$st]++;
+            }
+        }
+    }
+
+    return [
+        'fault_counts' => $counts,
+        'fault_alarms' => $faultAlarms,
+        'alarm' => $highestAlarm,
+    ];
 }

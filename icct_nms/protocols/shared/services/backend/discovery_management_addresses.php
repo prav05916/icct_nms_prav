@@ -1,7 +1,28 @@
 <?php
+
 /** ICCT-owned discovery management addresses services, derived from the existing ICCT NMS implementation. */
 
-/** Reused Inventory service: nd cdp management addresses. */
+/**
+ * Normalize supported collector records and string observations once for ports and topology.
+ * Invalid addresses are omitted; the first occurrence keeps its discovery order.
+ */
+function icct_nms_management_addresses($values)
+{
+    $addresses = [];
+    foreach ($values as $value) {
+        $address = is_array($value) ? $value['address'] ?? '' : $value;
+        if (is_string($address) && filter_var($address, FILTER_VALIDATE_IP)) {
+            $addresses[$address] = $address;
+        }
+    }
+    return array_values($addresses);
+}
+
+function icct_nms_discovery_addresses($values)
+{
+    return icct_nms_management_addresses($values);
+}
+
 function icct_backend_nd_management_address($bytes, $family, $source)
 {
     if (
@@ -23,10 +44,10 @@ function icct_backend_nd_management_address($bytes, $family, $source)
         'source' => $source,
         'requires_scope' => $scoped,
         'eligible_target' => $unicast && !$scoped,
-        'verified' => false
+        'verified' => false,
     ];
 }
 
-require_once __DIR__.'/../../../cdp/services/discovery_management_addresses.php';
+require_once __DIR__ . '/../../../cdp/services/discovery_management_addresses.php';
 
-require_once __DIR__.'/../../../lldp/services/discovery_management_addresses.php';
+require_once __DIR__ . '/../../../lldp/services/discovery_management_addresses.php';

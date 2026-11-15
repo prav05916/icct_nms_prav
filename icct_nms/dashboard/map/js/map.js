@@ -92,12 +92,31 @@
     // India-only offline state layer. No CDN or Internet tile request is used.
     map.createPane('statePolygons');
     map.getPane('statePolygons').style.zIndex = 350;
+    map.createPane('rivers');
+    map.getPane('rivers').style.zIndex = 360;
+    map.createPane('highwaysCasing');
+    map.getPane('highwaysCasing').style.zIndex = 370;
+    map.createPane('highwaysCore');
+    map.getPane('highwaysCore').style.zIndex = 375;
     map.createPane('stateLabels');
     map.getPane('stateLabels').style.zIndex = 450;
     map.getPane('stateLabels').style.pointerEvents = 'none';
     map.createPane('cityLabels');
     map.getPane('cityLabels').style.zIndex = 455;
     map.getPane('cityLabels').style.pointerEvents = 'none';
+
+    // Google Maps natural green terrain palette
+    const googleTerrainGreens = [
+        '#d7ecd9', '#dcedc8', '#c8e6c9', '#e8f5e9', '#e0f2f1',
+        '#d0ebd4', '#daf0d8', '#c5e8c5', '#d4edda', '#e2f0d9'
+    ];
+    function getGoogleTerrainColor(name) {
+        let hash = 0;
+        const str = String(name || '');
+        for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
+        return googleTerrainGreens[Math.abs(hash) % googleTerrainGreens.length];
+    }
+
     fetch(data.states, {credentials:'same-origin', cache:'force-cache'}).then(function (response) {
         if (!response.ok) throw new Error('State data unavailable');
         return response.json();
@@ -105,7 +124,15 @@
         const labels = [];
         L.geoJSON(states, {
             pane:'statePolygons',
-            style:function (feature) { return {color:basemapLayer?'#6c777b':'#7d898d', weight:basemapLayer?0.8:1, fillColor:feature.properties.color, fillOpacity:basemapLayer?0.08:0.65}; },
+            style:function (feature) {
+                const naturalColor = getGoogleTerrainColor(feature.properties.name || '');
+                return {
+                    color: basemapLayer ? '#90a4ae' : '#a5b4bc',
+                    weight: basemapLayer ? 0.8 : 1.2,
+                    fillColor: basemapLayer ? feature.properties.color : naturalColor,
+                    fillOpacity: basemapLayer ? 0.08 : 0.95
+                };
+            },
             onEachFeature:function (feature, layer) {
                 const name = document.createElement('span'); name.textContent = feature.properties.name;
                 layer.bindTooltip(name, {sticky:true});
@@ -118,6 +145,42 @@
                 }).addTo(map));
             }
         }).addTo(map);
+
+        // Load realistic rivers layer
+        if (data.rivers) {
+            fetch(data.rivers, {credentials:'same-origin', cache:'force-cache'}).then(function(r){ return r.json(); }).then(function(rivers){
+                L.geoJSON(rivers, {
+                    pane: 'rivers',
+                    style: { color: '#64b5f6', weight: 2.8, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+                }).addTo(map);
+            }).catch(function(){});
+        }
+
+        // Load realistic Google Maps highway network
+        if (data.highways) {
+            fetch(data.highways, {credentials:'same-origin', cache:'force-cache'}).then(function(r){ return r.json(); }).then(function(highways){
+                // Casing
+                L.geoJSON(highways, {
+                    pane: 'highwaysCasing',
+                    style: { color: '#e0a800', weight: 4.2, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }
+                }).addTo(map);
+                // Core
+                L.geoJSON(highways, {
+                    pane: 'highwaysCore',
+                    style: function(f) {
+                        const isExp = f.properties && f.properties.type === 'expressway';
+                        return {
+                            color: isExp ? '#ffea00' : '#ffffff',
+                            weight: 2.4,
+                            opacity: 1,
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                        };
+                    }
+                }).addTo(map);
+            }).catch(function(){});
+        }
+
         function placeLabels() {
             const occupied = [];
             const showStateLabels = map.getZoom() <= 6;

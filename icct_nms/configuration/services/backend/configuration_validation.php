@@ -1,7 +1,7 @@
 <?php
+
 /** ICCT-owned configuration validation services, derived from the existing ICCT NMS implementation. */
 
-/** Reused Inventory service: config choice. */
 function icct_backend_config_choice($value, $choices, $label)
 {
     if (!is_string($value) || !in_array($value, $choices, true)) {
@@ -10,7 +10,6 @@ function icct_backend_config_choice($value, $choices, $label)
     return $value;
 }
 
-/** Reused Inventory service: config integer. */
 function icct_backend_config_integer($value, $min, $max, $label)
 {
     if (
@@ -24,7 +23,6 @@ function icct_backend_config_integer($value, $min, $max, $label)
     return (int) $value;
 }
 
-/** Reused Inventory service: config text. */
 function icct_backend_config_text($value, $max, $label, $required = true)
 {
     if (!is_string($value) || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $value)) {
@@ -37,7 +35,6 @@ function icct_backend_config_text($value, $max, $label, $required = true)
     return $value;
 }
 
-/** Reused Inventory service: serial device address. */
 function icct_backend_serial_device_address($value)
 {
     return icct_backend_config_integer($value, 1, 247, 'Modbus device address');

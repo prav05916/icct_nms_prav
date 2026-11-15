@@ -1,0 +1,596 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 44 (North-South Corridor)",
+                "type": "expressway",
+                "ref": "NH 44"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        74.7973,
+                        34.0837
+                    ],
+                    [
+                        74.857,
+                        32.7266
+                    ],
+                    [
+                        75.5762,
+                        31.326
+                    ],
+                    [
+                        75.8573,
+                        30.901
+                    ],
+                    [
+                        76.7767,
+                        30.3782
+                    ],
+                    [
+                        77.209,
+                        28.6139
+                    ],
+                    [
+                        78.0081,
+                        27.1767
+                    ],
+                    [
+                        78.1828,
+                        26.2183
+                    ],
+                    [
+                        78.5685,
+                        25.4484
+                    ],
+                    [
+                        79.0882,
+                        21.1458
+                    ],
+                    [
+                        78.4867,
+                        17.385
+                    ],
+                    [
+                        78.0373,
+                        15.8281
+                    ],
+                    [
+                        77.5946,
+                        12.9716
+                    ],
+                    [
+                        78.146,
+                        11.6643
+                    ],
+                    [
+                        78.1198,
+                        9.9252
+                    ],
+                    [
+                        77.5385,
+                        8.0883
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 48 (Golden Quadrilateral West \/ South)",
+                "type": "expressway",
+                "ref": "NH 48"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.209,
+                        28.6139
+                    ],
+                    [
+                        75.7873,
+                        26.9124
+                    ],
+                    [
+                        74.6399,
+                        26.4499
+                    ],
+                    [
+                        73.7125,
+                        24.5854
+                    ],
+                    [
+                        72.5714,
+                        23.0225
+                    ],
+                    [
+                        73.1812,
+                        22.3072
+                    ],
+                    [
+                        72.8311,
+                        21.1702
+                    ],
+                    [
+                        72.8777,
+                        19.076
+                    ],
+                    [
+                        73.8567,
+                        18.5204
+                    ],
+                    [
+                        74.2433,
+                        16.705
+                    ],
+                    [
+                        74.4977,
+                        15.8497
+                    ],
+                    [
+                        75.124,
+                        15.3647
+                    ],
+                    [
+                        77.5946,
+                        12.9716
+                    ],
+                    [
+                        80.2707,
+                        13.0827
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 19 (Golden Quadrilateral North-East)",
+                "type": "expressway",
+                "ref": "NH 19"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.209,
+                        28.6139
+                    ],
+                    [
+                        78.0081,
+                        27.1767
+                    ],
+                    [
+                        80.3319,
+                        26.4499
+                    ],
+                    [
+                        81.8463,
+                        25.4358
+                    ],
+                    [
+                        82.9739,
+                        25.3176
+                    ],
+                    [
+                        86.4304,
+                        23.7957
+                    ],
+                    [
+                        86.9524,
+                        23.6739
+                    ],
+                    [
+                        88.3639,
+                        22.5726
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 16 (Golden Quadrilateral East Coast)",
+                "type": "expressway",
+                "ref": "NH 16"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        88.3639,
+                        22.5726
+                    ],
+                    [
+                        87.2319,
+                        22.346
+                    ],
+                    [
+                        85.8245,
+                        20.2961
+                    ],
+                    [
+                        83.2185,
+                        17.6868
+                    ],
+                    [
+                        80.648,
+                        16.5062
+                    ],
+                    [
+                        79.9865,
+                        14.4426
+                    ],
+                    [
+                        80.2707,
+                        13.0827
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 27 (East-West Corridor)",
+                "type": "trunk",
+                "ref": "NH 27"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        69.6293,
+                        21.6417
+                    ],
+                    [
+                        70.8022,
+                        22.3039
+                    ],
+                    [
+                        72.5714,
+                        23.0225
+                    ],
+                    [
+                        73.7125,
+                        24.5854
+                    ],
+                    [
+                        75.8648,
+                        25.2138
+                    ],
+                    [
+                        78.5685,
+                        25.4484
+                    ],
+                    [
+                        80.3319,
+                        26.4499
+                    ],
+                    [
+                        80.9462,
+                        26.8467
+                    ],
+                    [
+                        83.3732,
+                        26.7606
+                    ],
+                    [
+                        85.3647,
+                        26.1209
+                    ],
+                    [
+                        87.4753,
+                        25.7771
+                    ],
+                    [
+                        88.3953,
+                        26.7271
+                    ],
+                    [
+                        91.7362,
+                        26.1445
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 53 (Central Connector)",
+                "type": "trunk",
+                "ref": "NH 53"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        72.8311,
+                        21.1702
+                    ],
+                    [
+                        79.0882,
+                        21.1458
+                    ],
+                    [
+                        81.6296,
+                        21.2514
+                    ],
+                    [
+                        87.2319,
+                        22.346
+                    ],
+                    [
+                        88.3639,
+                        22.5726
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 66 (West Coast Highway)",
+                "type": "trunk",
+                "ref": "NH 66"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        72.8777,
+                        19.076
+                    ],
+                    [
+                        73.8278,
+                        15.4909
+                    ],
+                    [
+                        74.856,
+                        12.9141
+                    ],
+                    [
+                        75.7804,
+                        11.2588
+                    ],
+                    [
+                        76.2673,
+                        9.9312
+                    ],
+                    [
+                        76.9366,
+                        8.5241
+                    ],
+                    [
+                        77.5385,
+                        8.0883
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 65 (Deccan Highway)",
+                "type": "trunk",
+                "ref": "NH 65"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        73.8567,
+                        18.5204
+                    ],
+                    [
+                        78.4867,
+                        17.385
+                    ],
+                    [
+                        80.648,
+                        16.5062
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 52 (Central North-South)",
+                "type": "trunk",
+                "ref": "NH 52"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        75.7873,
+                        26.9124
+                    ],
+                    [
+                        75.8648,
+                        25.2138
+                    ],
+                    [
+                        75.8577,
+                        22.7196
+                    ],
+                    [
+                        75.124,
+                        15.3647
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 47 (Southern Diagonal)",
+                "type": "trunk",
+                "ref": "NH 47"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        78.146,
+                        11.6643
+                    ],
+                    [
+                        76.9558,
+                        11.0168
+                    ],
+                    [
+                        76.2673,
+                        9.9312
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 30 \/ NH 34 (Gangetic-Eastern Link)",
+                "type": "trunk",
+                "ref": "NH 30"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        80.9462,
+                        26.8467
+                    ],
+                    [
+                        81.8463,
+                        25.4358
+                    ],
+                    [
+                        79.9864,
+                        23.1815
+                    ],
+                    [
+                        81.6296,
+                        21.2514
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 3 (Agra-Mumbai Classic Link)",
+                "type": "trunk",
+                "ref": "NH 3"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        78.0081,
+                        27.1767
+                    ],
+                    [
+                        78.1828,
+                        26.2183
+                    ],
+                    [
+                        75.8577,
+                        22.7196
+                    ],
+                    [
+                        72.8777,
+                        19.076
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 1 (Grand Trunk Northern)",
+                "type": "expressway",
+                "ref": "NH 1"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.209,
+                        28.6139
+                    ],
+                    [
+                        76.7767,
+                        30.3782
+                    ],
+                    [
+                        75.8573,
+                        30.901
+                    ],
+                    [
+                        75.5762,
+                        31.326
+                    ],
+                    [
+                        74.8723,
+                        31.634
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "NH 7 (Himalayan Link)",
+                "type": "trunk",
+                "ref": "NH 7"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        76.7767,
+                        30.3782
+                    ],
+                    [
+                        76.7794,
+                        30.7333
+                    ],
+                    [
+                        78.0322,
+                        30.3165
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "East Trunk Link",
+                "type": "trunk",
+                "ref": "NH 22"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        85.1376,
+                        25.5941
+                    ],
+                    [
+                        85.3096,
+                        23.3441
+                    ],
+                    [
+                        87.2319,
+                        22.346
+                    ]
+                ]
+            }
+        }
+    ]
+}

@@ -1,6 +1,10 @@
 <?php
 /** Native migration checks confined to connection-local temporary tables. */
 if(PHP_SAPI!=='cli')exit(1);
+if (!file_exists('/var/www/html/cacti/include/cli_check.php')) {
+    echo "SKIP: Live Cacti integration tests run inside RHEL /var/www/html/cacti environment.\n";
+    exit(0);
+}
 include '/var/www/html/cacti/include/cli_check.php';
 require __DIR__ . '/../../shared/services/schema.php';
 if(!db_execute('CREATE TEMPORARY TABLE qa_copy LIKE plugin_icct_nms_meta')||!db_execute('CREATE TEMPORARY TABLE plugin_icct_nms_meta LIKE qa_copy')||!db_execute('DROP TEMPORARY TABLE qa_copy'))throw new RuntimeException('Isolation failed');

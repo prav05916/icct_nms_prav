@@ -66,5 +66,5 @@ if (is_readable($icctMapCitiesFile)) {
 <div id="mapSiteAlarms" class="topology-summary-alarms"></div>
 <nav class="topology-summary-links map-site-links" aria-label="Site actions"><a id="mapSiteTopology" href="dashboard/controllers/topology.php">View Topology <span aria-hidden="true">→</span></a><button type="button" disabled title="Site chat is not configured.">Chat <span aria-hidden="true">→</span></button></nav>
 </dialog>
-<script type="application/json" id="icctMapData" data-summary-url="dashboard/controllers/topology.php"><?= json_encode(($mapViewData ?? $mapData)+['states'=>'shared/assets/maps/india-states.json','cities'=>$icctMapCities,'basemap'=>$mapBasemap ?? null,'refresh_seconds'=>30],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR) ?></script>
+<script type="application/json" id="icctMapData" data-summary-url="dashboard/controllers/topology.php"><?= json_encode(($mapViewData ?? $mapData)+['states'=>'shared/assets/maps/india-states.json','highways'=>'dashboard/map/data/india-highways.json','rivers'=>'dashboard/map/data/india-rivers.json','cities'=>$icctMapCities,'basemap'=>$mapBasemap ?? null,'refresh_seconds'=>30],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR) ?></script>
 </section>

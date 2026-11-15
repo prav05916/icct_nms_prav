@@ -1,6 +1,10 @@
 <?php
 /** Real SQL round trips use connection-local temporary tables only. */
 if(PHP_SAPI!=='cli')exit(1);
+if (!file_exists('/var/www/html/cacti/include/cli_check.php')) {
+    echo "SKIP: Live Cacti integration tests run inside RHEL /var/www/html/cacti environment.\n";
+    exit(0);
+}
 include '/var/www/html/cacti/include/cli_check.php';
 require __DIR__.'/../services/schema.php';
 require __DIR__.'/../../presets/services/rack_preset_service.php';

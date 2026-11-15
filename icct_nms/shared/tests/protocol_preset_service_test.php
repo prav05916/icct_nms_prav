@@ -7,7 +7,7 @@ require __DIR__ . '/../../protocols/shared/services/protocol_preset_service.php'
 require __DIR__ . '/../../protocols/syslog/services/backend/syslog.php';
 $stored=null; $writes=0;
 function db_fetch_cell_prepared($sql,$args) { global $stored; return str_contains($sql,'meta_value') ? $stored : 1; }
-function db_execute_prepared($sql,$args) { global $stored,$writes; if(!str_contains($sql,'plugin_icct_nms_meta')) throw new RuntimeException('Defaults must not write a device or assignment.'); $stored=$args[1];$writes++; return true; }
+function db_execute_prepared($sql,$args) { global $stored,$writes; if(in_array($sql, ['START TRANSACTION', 'COMMIT', 'ROLLBACK'], true)) return true; if(!str_contains($sql,'plugin_icct_nms_meta')) throw new RuntimeException('Defaults must not write a device or assignment.'); $stored=$args[1];$writes++; return true; }
 $ssh=['preset_protocol'=>'ssh','port'=>'22','connect_timeout'=>'10','command_timeout'=>'30','retries'=>'1','keepalive'=>'30','auth_method'=>'password','username'=>'operator','monitoring'=>'1','secret'=>'device-only-secret'];
 icct_nms_save_protocol_preset($ssh);
 $draft=icct_nms_protocol_presets()['ssh'];

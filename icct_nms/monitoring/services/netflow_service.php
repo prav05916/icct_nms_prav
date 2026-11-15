@@ -12,6 +12,20 @@
  *   - 5.3.3.4.6 Pinpointing network over-utilization causes & highlighting top talkers
  *   - 5.3.3.5   Comprehensive CSV / JSON export reports
  */
+require_once dirname(__DIR__, 2) . '/protocols/netflow/services/netflow_rules.php';
+
+if (!function_exists('icct_nms_netflow_validate')) {
+    function icct_nms_netflow_validate(array $input): array {
+        $out = [];
+        $out['version'] = (string) ($input['version'] ?? '9');
+        $out['collector'] = trim((string) ($input['collector'] ?? ''));
+        $out['port'] = isset($input['port']) ? (int) $input['port'] : 2055;
+        $out['active_timeout'] = isset($input['active_timeout']) ? (int) $input['active_timeout'] : 1800;
+        $out['inactive_timeout'] = isset($input['inactive_timeout']) ? (int) $input['inactive_timeout'] : 15;
+        $out['sampling_rate'] = isset($input['sampling_rate']) ? (int) $input['sampling_rate'] : 1;
+        return $out;
+    }
+}
 
 /**
  * Protocol number to name mapping.
@@ -1282,4 +1296,148 @@ function icct_nms_netflow_export_json(int $hostId = 0): string {
         'wan_lan_trends'   => icct_nms_netflow_wan_lan_trends($hostId, 24),
         'anomalies'        => icct_nms_netflow_anomalies($hostId, 20),
     ], JSON_PRETTY_PRINT);
+}
+
+/**
+ * Lightweight NetFlow summary for topology map view.
+ * Returns key stats for a single device (used in topology_view_service.php).
+ */
+function icct_nms_netflow_topology(int $hostId): array {
+    if (!function_exists('db_fetch_row_prepared')) {
+        return ['enabled' => false];
+    }
+    $status = icct_nms_netflow_status($hostId, false);
+    if (empty($status) || ($status['status'] ?? 'none') === 'none') {
+        return ['enabled' => false];
+    }
+    $topTalkers = icct_nms_netflow_top_talkers($hostId, 1);
+    $anomalies  = icct_nms_netflow_anomalies($hostId, 1);
+    return [
+        'enabled'        => true,
+        'status'         => $status['status'] ?? 'listening',
+        'flows_per_sec'  => $status['flows_per_second'] ?? 0,
+        'bytes_per_sec'  => $status['bytes_per_second'] ?? 0,
+        'top_talker_ip'  => $topTalkers[0]['src_ip'] ?? '',
+        'top_talker_bytes' => $topTalkers[0]['total_bytes'] ?? 0,
+        'anomaly_status' => !empty($anomalies) ? ($anomalies[0]['severity'] ?? 'normal') : 'normal',
+        'last_seen'      => $status['last_seen'] ?? null,
+    ];
+}
+
+/**
+ * Return NetFlow device assignment configuration.
+ */
+if (!function_exists('icct_nms_netflow_assignment')) {
+    function icct_nms_netflow_assignment(int $hostId): array {
+        if (!function_exists('db_fetch_row_prepared')) return [];
+        $row = db_fetch_row_prepared(
+            'SELECT * FROM plugin_icct_nms_netflow_devices WHERE host_id = ?',
+            [$hostId]
+        );
+        return $row ?: [];
+    }
+}
+
+if (!function_exists('icct_nms_netflow_defaults')) {
+    function icct_nms_netflow_defaults(): array {
+        return [
+            'enabled'          => 1,
+            'collector'        => 'localhost',
+            'collector_ip'     => '127.0.0.1',
+            'collector_port'   => 2055,
+            'flow_version'     => 9,
+            'version'          => 9,
+            'port'             => 2055,
+            'sampling_rate'    => 1,
+            'sampling'         => 1,
+            'active_timeout'   => 300,
+            'inactive_timeout' => 15,
+            'timeout'          => 300,
+            'active_flows'     => 0,
+            'flows_per_second' => 0.0,
+            'bytes_per_second' => 0,
+            'top_talker_ip'    => '',
+            'top_talker_bytes' => 0,
+        ];
+    }
+}
+
+if (!function_exists('icct_nms_netflow_fields')) {
+    function icct_nms_netflow_fields(): array {
+        return [
+            'enabled',
+            'collector',
+            'collector_ip',
+            'collector_port',
+            'flow_version',
+            'sampling_rate',
+            'active_timeout',
+            'inactive_timeout',
+            'active_flows',
+            'flows_per_second',
+            'bytes_per_second',
+            'top_talker_ip',
+            'top_talker_bytes',
+            'version',
+            'port',
+            'timeout',
+            'sampling',
+        ];
+    }
+}
+
+
+
+/**
+ * Classify application from flow record (Requirement 5.3.3.4.4 (c)).
+ */
+function icct_nms_netflow_application(array $record): array {
+    if (!empty($record['application_name'])) {
+        return ['name' => (string)$record['application_name'], 'basis' => 'exporter'];
+    }
+    if (!empty($record['application_id'])) {
+        return ['name' => 'Application ' . (string)$record['application_id'], 'basis' => 'exporter'];
+    }
+    $proto = (int)($record['proto'] ?? ($record['protocol'] ?? 0));
+    $src = (int)($record['src_port'] ?? 0);
+    $dst = (int)($record['dst_port'] ?? 0);
+
+    $wellKnown = [
+        80  => 'HTTP',
+        443 => 'HTTPS',
+        22  => 'SSH',
+        23  => 'Telnet',
+        25  => 'SMTP',
+        53  => 'DNS',
+        123 => 'NTP',
+    ];
+    if ($proto === 17 && (($src === 67 && $dst === 68) || ($src === 68 && $dst === 67))) {
+        return ['name' => 'DHCP', 'basis' => 'port-based service'];
+    }
+    $srcKnown = isset($wellKnown[$src]);
+    $dstKnown = isset($wellKnown[$dst]);
+    if ($srcKnown && $dstKnown) {
+        return ['name' => 'Not reported', 'basis' => 'unreported'];
+    }
+    if ($dstKnown) {
+        return ['name' => $wellKnown[$dst], 'basis' => 'port-based service'];
+    }
+    if ($srcKnown) {
+        return ['name' => $wellKnown[$src], 'basis' => 'port-based service'];
+    }
+    return ['name' => 'Not reported', 'basis' => 'unreported'];
+}
+
+/**
+ * Generate canonical hash identity for a batch of NetFlow flows.
+ */
+function icct_nms_netflow_payload_key(int $id, array $flows): string {
+    $normalized = [];
+    foreach ($flows as $f) {
+        unset($f['application'], $f['application_basis']);
+        ksort($f);
+        $normalized[] = json_encode($f);
+    }
+    sort($normalized);
+    return hash('sha256', $id . '|' . implode('#', $normalized));
 }

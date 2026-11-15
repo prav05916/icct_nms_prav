@@ -1,6 +1,10 @@
 <?php
 /** Read-only page render and service QA over a connection-local migrated schema. */
 if(PHP_SAPI!=='cli')exit(1);
+if (!file_exists('/var/www/html/cacti/include/cli_check.php')) {
+    echo "SKIP: Live Cacti integration tests run inside RHEL /var/www/html/cacti environment.\n";
+    exit(0);
+}
 include '/var/www/html/cacti/include/cli_check.php';api_plugin_load_realms();require_once $config['base_path'].'/lib/auth.php';
 if(db_fetch_cell("SHOW COLUMNS FROM plugin_icct_nms_racks LIKE 'node_id'"))foreach(['plugin_icct_nms_racks','plugin_icct_nms_rack_nodes','plugin_icct_nms_meta'] as $table){
  if(!db_execute("CREATE TEMPORARY TABLE qa_copy LIKE `$table`")||!db_execute("INSERT INTO qa_copy SELECT * FROM `$table`")||!db_execute("CREATE TEMPORARY TABLE `$table` LIKE qa_copy")||!db_execute("INSERT INTO `$table` SELECT * FROM qa_copy")||!db_execute('DROP TEMPORARY TABLE qa_copy'))throw new RuntimeException('Isolation failed');

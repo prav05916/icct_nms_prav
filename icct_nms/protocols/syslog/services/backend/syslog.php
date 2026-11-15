@@ -9,6 +9,7 @@
  */
 
 class IcctSyslogStorageException extends RuntimeException {}
+require_once __DIR__ . '/../syslog_normalize.php';
 function icct_backend_syslog_execute($sql, $parameters)
 {
     if (db_execute_prepared($sql, $parameters) === false) throw new IcctSyslogStorageException('Syslog database write failed; the spool cursor was retained.');
@@ -119,21 +120,15 @@ function icct_backend_syslog_match_device($source_ip, $source_host)
     return [];
 }
 
-function icct_backend_syslog_timestamp($value)
-{
-    try {
-        $date = new DateTimeImmutable((string) $value);
-        return $date->setTimezone(new DateTimeZone(date_default_timezone_get()))->format('Y-m-d H:i:s');
-    } catch (Throwable $error) {
-        return date('Y-m-d H:i:s');
-    }
-}
-
 function icct_backend_syslog_transport($input_name)
 {
-    $input_name = strtolower((string) $input_name);
-    if (strpos($input_name, 'tcp') !== false) return 'tcp';
-    if (strpos($input_name, 'udp') !== false) return 'udp';
+    $input_name = strtolower(trim((string) $input_name));
+    if (in_array($input_name, ['icct-tcp', 'imtcp', 'tcp'], true)) {
+        return 'tcp';
+    }
+    if (in_array($input_name, ['icct-udp', 'imudp', 'udp'], true)) {
+        return 'udp';
+    }
     return 'unknown';
 }
 
@@ -430,7 +425,7 @@ function icct_backend_syslog_import_spool_once($file, $max_records = 5000)
 {
     $file = (string) $file;
     $max_records = max(1, min(20000, (int) $max_records));
-    if (!is_file($file) || !is_readable($file)) {
+    if (!file_exists($file)) {
         throw new RuntimeException('Syslog test spool is missing or unreadable: ' . $file);
     }
 

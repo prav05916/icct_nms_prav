@@ -2,6 +2,76 @@
 
 `icct_nms` is an independent Cacti 1.2.31 plugin implementing the shared responsive Inventory designs. It works with the NMS plugin disabled or uninstalled. Runtime requests and collectors use only Cacti core tables and this plugin's `plugin_icct_nms_*` tables. There is no other-plugin database lookup or fallback.
 
+## Version 1.4.2
+
+A release can include the complete plugin and a verified OS/CPU-specific offline package bundle in one installer archive. The bootstrap verifies checksums, backs up existing source, preserves local configuration and uploaded data, copies source atomically and invokes native Cacti setup. Release builds exclude credentials, runtime data and developer tests. Debian offline APT installation uses empty repository sources/lists so local package installation cannot fall back to network repositories.
+
+## Version 1.4.1
+
+Installation Checks lists required PHP extensions, local binaries, bundled assets and worker states behind Cacti Installation/Upgrades permission. The explicit Linux administrator installer provides a read-only plan, native plugin installation, package provisioning, dynamic service paths/accounts, and checksummed offline package bundles tied to the target OS/release/architecture. See [installation instructions](installation/README.md). SSH/HTTPS, Pathchar and currently unimplemented NTP/TACACS+ backends remain explicit requirements; package installation alone does not imply all protocols are ready.
+
+## Version 1.4.1 — QA and offline RHEL
+
+Hidden fault validation opens the owning FCAPS tab before focus. Secure browser tokens use one HTTP-compatible implementation. Topology identifies cables by device/port pairs, merges reciprocal reports and preserves separate parallel cables. Alarm workflow charts read the authorized alarm journal. A shared local palette defines severity colors for PHP, JavaScript and CSS.
+
+Diagnostics use the database as their sole queue and result store; Redis is no longer used or required. Missing or mismatched saved Serial settings require review and Save instead of substituting connection settings. NetFlow application names require exporter evidence; absent identity is shown as Not reported. Invalid saved JSON is reported instead of silently resetting settings. Only preset/starter defaults initialize absent configuration.
+
+Install required RPMs and their dependencies from approved offline RHEL media before installing feature services. The NetFlow installer performs local preflight checks and does not invoke a package manager or download files. Cacti, MariaDB, PHP 8.0+, the listed PHP extensions, native SNMP/RRD tools, Python 3 and feature-specific tools must be installed. Fonts, map boundaries, Leaflet, SSH PHP dependencies and browser assets are bundled. SSH still requires HTTPS, the strict-auth patched guacd build and a configured private broker; plain HTTP supports the other browser workflows but cannot enroll SSH credentials. Preserve the installation's SELinux policy, secrets and user uploads during source updates.
+
+## Version 1.3.5
+
+NetFlow tooltips use concise purpose and input-range guidance, with short examples where useful.
+
+## Version 1.3.4
+
+NetFlow field tooltips explain purpose, accepted input/range, units, examples and how to apply the setting. Collector and exporter help distinguishes receiver and device addresses. Text input lengths match backend limits; device NetFlow setup also includes exporter source IP help.
+
+## Version 1.3.3
+
+NetFlow setup explanations now appear in the project-style information tooltips beside each field. The two explanatory paragraphs and saved/unsaved preset status lines are removed. Independent version/mode presets and draft restoration remain available. Numeric input ranges match backend validation.
+
+## Version 1.3.2
+
+All supported protocol presets show saved/unsaved status. SNMP v1/v2/v3, SSH password/private-key modes and Serial Modbus RTU/ASCII each retain independent non-secret settings, alongside the existing per-version NetFlow presets. CDP, LLDP and Syslog retain separate single presets. Installation/upgrade seeds missing variants without replacing saved values. Switching modes keeps page-local drafts; Save persists the selected mode for new protocol assignments without changing saved devices. Passwords, private keys and SNMP community strings are excluded.
+
+## Version 1.3.1
+
+Installation and upgrades save portable starter presets for SNMP, CDP, LLDP, SSH, Serial, Syslog and NetFlow. Existing settings are preserved; shipped presets exclude passwords, keys and SNMP community strings. Set credentials on each device. NetFlow v5, v7, v9 and IPFIX have independent saved presets: switching format restores its values and keeps unsaved drafts until the page is left. Save persists the selected format and makes it the default for newly added NetFlow protocols. Existing device assignments remain unchanged. Fresh collector defaults use the installation hostname (confirm it is reachable from exporters); IPFIX starts on port 4739 and NetFlow on 2055. NTP and TACACS+ remain unavailable pending their backend integrations.
+
+## Version 1.3.0
+
+NetFlow/IPFIX now integrates enabled Presets, per-device exporter mappings, and a read-only Inventory reporting tab linked from topology. The nfdump receiver decodes v5, v7, v9 and IPFIX with IPv4/IPv6 transport. Owned tables retain decoded flows, trends and anomaly history; capture imports are transactional and idempotent. Reports include time/IP/port/protocol/version/application/LAN-WAN filters, bandwidth charts, top source/destination hosts, protocols, exporter-reported application identities, conversations, pagination and CSV export. Per-device rules flag scans, SYN floods, worm-like SMB/RPC fan-out and bandwidth overuse; fresh normal observations resolve findings. Collectors are isolated by native Cacti poller ID and run offline after package installation. See [deployment and operating notes](protocols/netflow/README.md) for exporter setup, retention, classification and sampling.
+
+## Version 1.2.19
+
+Alarm History expands to fit all rows on the selected page without an internal vertical scrollbar. Pagination follows the final row; narrow screens retain horizontal table scrolling.
+
+## Version 1.2.18
+
+Pagination uses a shared solid triangle SVG for previous/next across Inventory, device graphs and records, device types, Syslog, topology connections/discovery, racks, MIB lists/objects and alarm lists/history. Accessible labels, disabled states and existing navigation are preserved.
+
+## Version 1.2.17
+
+Escalation now shows Ticket Severity, Ticket Name and Remarks alongside a newest-first status timeline: OPENED (blue), IN PROGRESS (teal), RESOLVED (yellow) and REOPEN (orange). Escalation creates an open local ticket; authorized list actions progress, resolve and reopen it with immutable remarks and timestamps. Ticket metadata is saved in the existing history snapshots and stays scoped to its alarm activation. Device permissions, CSRF and revision checks apply. This is local ticket tracking; no external ticket delivery is configured.
+
+## Version 1.2.16
+
+The final alarm detail layout adds checked-circle Ack/Esc indicators, native acknowledger username/email, and Alarm History pagination with page size, range, page selection and navigation. Stored acknowledgement remarks remain associated with their event-time snapshot and are carried forward only within the same activation. The history table scrolls under a fixed header while its pagination remains visible. The removed plus buttons and blank missing table fields remain as requested.
+
+## Version 1.2.15
+
+The Alarms eye action opens a dedicated full-page view with the Figma summary labels, Acknowledgement & Remarks, and Alarm History/Escalation tabs. Back navigation and detail CSV export use the same saved alarm and device permissions as the list. Acknowledgement and escalation actions are available from the list; the detail header contains only Export. Missing history fields are left blank. Tab selection survives a reload, dates use `DD-MM-YYYY HH:mm:ss` in Asia/Kolkata, and the page refreshes saved data every 30 seconds.
+
+History now captures immutable event-time severity, Description, Fix, acknowledgement and occurrence count. Editing a rule's text records a new details event without rewriting older snapshots. Upgrading starts a current-observation baseline for existing alarms; older events without captured content remain marked as unavailable. Run the native plugin upgrade to add the snapshot column before using this view.
+
+## Version 1.2.14
+
+The new **Alarms** menu lists device-linked Cacti data-source thresholds, SNMP/MIB fault rules, port alarms and current native device reachability failures. The configured Cacti poller maintains a durable alarm journal; the page refreshes every 30 seconds and supports device/severity/acknowledgement/escalation filters, search, occurrence sorting, pagination and CSV export. First-seen times and recurrence counts are retained; missing measurements never imply recovery. Initial synchronization records currently observed alarms without inventing historical occurrence times. Existing raw Syslog messages remain in each device's Syslog history.
+
+Operators can acknowledge, record a local escalation, close alarms, and manage local ticket status. Alarm History records collector transitions and operator notes. These workflow actions do not send email, create an external service-desk ticket or forward an escalation to CNMS. Device management permissions, device ACLs and graph visibility apply to reads and writes. Concurrent edits require a fresh revision. A manually closed alarm stays closed until an observed recovery and recurrence.
+
+MIB and device fault forms now use editable **Description** and **Fix** fields. Existing fixes and descriptions are preserved; previously empty device descriptions receive factual text derived from the saved threshold. The read-only device view and Alarms list show the same saved content. Upgrade and enable the plugin through native Plugin Management to install the two additive alarm tables before using the page. For a one-time resynchronization after ordinary collection, run `php plugins/icct_nms/alarms/cli/collect_alarms.php` on the assigned collector.
+
 ## Version 1.2.13
 
 Map View and Birds Eye View now show this LNMS and Cacti's configured remote pollers. The local LNMS is the radar center; availability comes from native poller heartbeats. Assign each poller to a native site under Presets → Site → LNMS / Remote Poller Locations. Only sites with valid coordinates are plotted geographically. Missing locations remain explicit; IP addresses and installation URLs never create guessed coordinates. The radar uses labeled logical positions when geographic information is incomplete. No Bluetooth, subnet scan, internet geolocation or device-site demo markers are used. The plugin root URL opens the dashboard.
@@ -212,11 +282,7 @@ BLR sections 5.3.2.1.1 and 5.3.5.3.1 are partially covered: LLDP/CDP Layer 2 nei
 
 ### Live diagnostic queue and result delivery
 
-The diagnostic page submits once and reads job status automatically every 500 ms until completion. Its Run button and method selector are disabled while pending; repeat submissions for the same owner/device/tool return the existing job. Results and errors render as text without HTML interpretation. The collector receives FIFO Redis notifications and caches job results for 300 seconds; Cacti’s database remains authoritative for ownership, device access, job status, configuration hash and recovery. A Redis outage falls back to the database without repeating a test or bypassing permissions. The listener rechecks the explicitly requesting user’s registered plugin realm, rather than a web-only filename map that is absent in a CLI listener.
-
-Redis runs locally through `/run/redis/redis.sock`, with no TCP listener. The included `shared/deployment/redis-local.conf` and `shared/deployment/redis-systemd.conf` describe the deployed dedicated service configuration. The plugin contains its bounded RESP client in `includes/services/diagnostics_redis.php`; no PHP Redis extension is required. An administrator can set `$config['icct_nms_redis_socket']` to another private Unix socket. Remote collectors retain DB fallback when their local Redis is not shared with the web host. MySQL locks and saved authorization checks still prevent concurrent or repeated bandwidth execution. The test duration cannot be eliminated by Redis; the UI shows the result as soon as it completes.
-
-Validation: all 14 saved methods passed bounded execution on the local IPv4 device (Ping; UDP/ICMP/TCP traceroute; ICMP/TCP MTR, Nping and Hping; ARP; iPerf3; Netperf; Pathchar). iPerf3/Netperf used temporary local servers and are labelled collector self-tests, not external link bandwidth. Redis tests verify FIFO notifications, bounded binary-safe framing, expiry, ownership/device/collector/configuration matching and transport outage fallback. Authorization tests cover revoked account, device and plugin-realm access. Live browser checks verified automatic queued-to-complete Ping and the corrected Inventory ARP popup.
+The diagnostic page submits once and reads job status automatically every 500 ms until completion. Its Run button and method selector are disabled while pending; repeat submissions for the same owner/device/tool return the existing job. Results and errors render as text without HTML interpretation. The collector checks the durable database queue once per second. Job ownership, device access, status and configuration are checked against that same database. The listener rechecks the explicitly requesting user’s registered plugin realm, rather than a web-only filename map that is absent in a CLI listener.
 
 Topology Configuration → Device Connections contains the discovery and diagnostics actions beside existing connection results, using the same saved method selection, protocol gates, configuration hash and freshness rules as topology device popups. Legacy Discovery & Diagnostics URLs redirect to Device Connections. Discover Now queues only that authorized device through its assigned collector; diagnostics opens only its saved diagnostic choices. Layer 2 LLDP/CDP links are confirmed neighbour adjacencies; IP-MIB IPv4/IPv6 and BRIDGE/Q-BRIDGE MAC results remain observations and do not constitute a complete routed Layer 3 topology.
 
@@ -234,7 +300,7 @@ MIB review automatically fills declared numeric bounds along with names, syntax-
 
 ### Managed diagnostic listener on systemd collectors
 
-When Cacti's poller uses a one-shot systemd service, its child listeners are stopped with the poller's control group. Install `shared/deployment/icct-nms-diagnostics.service` as a separate enabled service to keep diagnostics available between poller runs. The supplied unit uses the standard `/var/www/html/cacti` path and `apache` account; adjust both for the installation. In Cacti's `include/config.php`, set `$config['icct_backend_diagnostic_listener_launcher'] = 'service';` so the poller does not also launch the listener. Use `systemctl enable --now icct-nms-diagnostics.service` after installing the unit and reloading systemd. The worker retains its device, owner, protocol selection, and registered plugin realm checks; Redis remains a wakeup/result cache with durable database fallback.
+When Cacti's poller uses a one-shot systemd service, its child listeners are stopped with the poller's control group. Install `shared/deployment/icct-nms-diagnostics.service` as a separate enabled service to keep diagnostics available between poller runs. The supplied unit uses the standard `/var/www/html/cacti` path and `apache` account; adjust both for the installation. In Cacti's `include/config.php`, set `$config['icct_backend_diagnostic_listener_launcher'] = 'service';` so the poller does not also launch the listener. Use `systemctl enable --now icct-nms-diagnostics.service` after installing the unit and reloading systemd. The worker retains its device, owner, protocol selection, and registered plugin realm checks; The database is the sole diagnostic queue and result store.
 
 ### Device preset inheritance
 
@@ -250,7 +316,7 @@ Fault SNMP parameter selection uses this device’s resolved Cacti SNMP inputs a
 
 In Device → Protocol Config, add Syslog, select Severity and Facility values, enter optional Trigger Keywords / Match Strings, then Save. These three parameters also support Protocol presets and device overrides. The sender address comes from the device hostname/IP; UDP and TCP are accepted by default. Keywords match any configured phrase, case-insensitively; an empty list accepts all messages. The combined keyword length is limited to 148 characters. Syslog is available in Protocol presets, device setup, and Device View → Syslog. The device view shows its saved settings and received messages with severity colors, search, duplicate counts, and pagination. The standalone Syslog Console and its navigation links have been retired; old device-specific console links redirect to that device’s Syslog tab. Events remain scoped by Cacti device permissions, and receiver services and retained events are preserved.
 
-On RHEL, run `sudo bash plugins/icct_nms/protocols/syslog/rhel/install_syslog_rhel.sh /var/www/html/cacti` after the plugin schema upgrade. Set `OPEN_FIREWALL=1` only when this collector should accept UDP/TCP 514 through firewalld. The installer validates rsyslog and retains its previous configuration on failure. The worker imports `/var/log/icct-nms/remote.ndjson`; a daily timer retains events for 90 days. Devices must forward messages to the collector. Unmapped senders, disabled devices/protocols and messages outside the selected severity, facility, keyword or transport policy are discarded.
+On RHEL, run `sudo bash plugins/icct_nms/protocols/syslog/rhel/install_syslog_rhel.sh /var/www/html/cacti` after the plugin schema upgrade. The default is TCP and UDP port 514. To change it, run `sudo env SYSLOG_PORT=1514 bash plugins/icct_nms/protocols/syslog/rhel/install_syslog_rhel.sh /var/www/html/cacti`. The installer saves the port and updates existing ICCT local forwarding. To enable local journal forwarding for the first time, run the companion `enable_local_syslog_rhel.sh` as root. It reads the saved port. Configure devices to send to that same port. On SELinux Enforcing hosts, make sure the chosen TCP and UDP port is permitted for rsyslog (`syslogd_port_t`) before applying the change. Set `OPEN_FIREWALL=1` to add the configured TCP and UDP port through firewalld. The installer validates rsyslog and retains its previous configuration on failure. The worker imports `/var/log/icct-nms/remote.ndjson`; a daily timer retains events for 90 days. Devices must forward messages to the collector. Unmapped senders, disabled devices/protocols and messages outside the selected severity, facility, keyword or transport policy are discarded.
 
 The base schema contract remains 1.2.0; this release adds three plugin-owned Syslog tables. Network reception uses rsyslog; Cacti remains authoritative for device identity and access.
 
@@ -276,3 +342,30 @@ The additive Syslog migration is `icct_nms_schema_syslog_availability_migration(
 
 
 Database compatibility with the supplied v1.3.2 ZIP: the four `plugin_icct_nms_syslog_*` tables and the native `sites`/`host` Map storage are compatible. `shared/database/schema.sql` also includes the ZIP's four `plugin_icct_nms_ntp_*` and five `plugin_icct_nms_netflow_*` tables, using their original names and definitions. These tables prepare storage only; NTP and NetFlow application modules and workers still require a separate integration. VM chrony/NTP clock synchronization is independent of these per-device monitoring tables.
+
+
+### Discovery and GNSS workers (1.4.0)
+
+Discovery uses the existing **Topology Configuration → Networks**, **Discovered Devices** and **Device Connections** screens. Choose combined ICMP, SNMP, TCP ports, CDP and LLDP in Add/Edit Network. Discover Now starts Cacti's native automation and an additional bounded evidence job on the assigned collector. Cacti's scheduled runs are mirrored by the discovery worker. The native Automatically Add to Cacti option retains its native rule/template behavior; otherwise Review / Add opens the existing Add Device wizard. Graph and data query selections stay in its existing steps. Range observations alone never create physical links.
+
+Saved SNMP credential sets remain in Cacti. Results contain observations, not passwords. Repeated review uses native host IDs and a database lock; ambiguous identities require Inventory review. Completed evidence survives cancellation and retry. Existing status/identity changes are recorded in the plugin event journal and reported through existing dashboard notifications.
+
+Register each remote collector through Cacti’s existing **Remote Data Collector installation** workflow, which creates its native poller record on the primary server. Manage the registered collector through **Cacti Backend → Data Collection → Data Collectors**. Install this plugin and both workers on each collector. The worker uses that collector's native `poller_id` and Cacti's primary database connection; when the primary is unavailable it stops and retries, rather than using stale local permissions. The main server does not scan on behalf of a remote collector.
+
+On RHEL, with the plugin at `/var/www/html/cacti/plugins/icct_nms`, PHP CLI, Python 3 and native Cacti SNMP tools already installed:
+
+```sh
+sudo install -m 0644 /var/www/html/cacti/plugins/icct_nms/inventory/discovery/deploy/icct-nms-discovery.service /etc/systemd/system/
+sudo install -m 0644 /var/www/html/cacti/plugins/icct_nms/inventory/discovery/deploy/icct-nms-location.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now icct-nms-discovery icct-nms-location
+sudo systemctl status icct-nms-discovery icct-nms-location
+```
+
+Adjust service paths/user/group for other installations. Collection and the shipped UI assets do not require Internet access. Native ICMP probing needs Cacti's normal ping permissions. TCP scans cover explicitly selected ports (1–65535), up to 4096 addresses and 262144 address/port combinations per job.
+
+Configure GNSS through **Presets → Site → Configure GNSS** beside the appropriate collector. Supported inputs are vendor SNMP coordinate/fix OIDs, NMEA TCP/UDP, USB/RS-232 serial, local NMEA files and gpsd TPV. Select the actual receiver transport; a generic model cannot supply vendor OIDs automatically. Coordinates update the existing Map/Birds Eye poller marker without overwriting the saved site. Invalid, future or stale fixes do not appear as a current position. Birds Eye uses logical positions when coordinates are absent, not inferred geographic distance.
+
+For file input, place a current checksum-valid NMEA file under `/var/lib/icct-nms/gnss/` and grant the service read access. For serial, allow the service user access to the receiver device; the supplied RHEL unit uses the `dialout` group. Allow only the configured receiver/collector traffic through the existing firewall. SNMP uses the selected Inventory device's credentials. A GNSS device must belong to that collector. Real hardware and remote receiver connectivity require site-specific verification.
+
+Map/Birds Eye contain native LNMS/pollers only. Cross-collector connections are derived from existing manual or fresh CDP/LLDP device links; link Up/Down comes from collected interface readings. Missing readings are not shown as a healthy link. Dashboard refresh is saved per user (5–3600 seconds).

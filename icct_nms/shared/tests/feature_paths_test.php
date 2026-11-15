@@ -1,7 +1,7 @@
 <?php
 /** Protect the feature layout and static page dependencies after moving HTTP routes. */
 $root = dirname(__DIR__, 2);
-$directories = ['configuration', 'dashboard', 'fcaps', 'graphs', 'inventory', 'monitoring', 'ports', 'presets', 'protocols', 'shared'];
+$directories = ['alarms', 'configuration', 'dashboard', 'fcaps', 'graphs', 'installation', 'inventory', 'monitoring', 'ports', 'presets', 'protocols', 'shared'];
 $actual = array_values(array_filter(scandir($root), fn($name) => $name[0] !== '.' && is_dir($root . '/' . $name)));
 sort($actual);
 if ($actual !== $directories) throw new RuntimeException('Unexpected root directories: ' . implode(', ', $actual));
@@ -13,7 +13,7 @@ foreach ($files as $file) {
     if ($file->getExtension() !== 'php' || strpos($file->getPathname(), '/templates/') === false) continue;
     preg_match_all('~(?:href|src|action)="([^"<>]+)"~', file_get_contents($file->getPathname()), $matches);
     foreach ($matches[1] as $url) {
-        if (!preg_match('~^(?:inventory|dashboard|protocols|presets|ports|fcaps|graphs|configuration|monitoring|shared)/~', $url)) continue;
+        if (!preg_match('~^(?:alarms|configuration|dashboard|fcaps|graphs|installation|inventory|monitoring|ports|presets|protocols|shared)/~', $url)) continue;
         $path = parse_url(html_entity_decode($url), PHP_URL_PATH);
         if (!is_file($root . '/' . $path)) throw new RuntimeException('Missing page dependency: ' . $url . ' in ' . $file->getPathname());
         $count++;

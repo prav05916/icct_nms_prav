@@ -1,4 +1,8 @@
 <?php
+if (!file_exists(__DIR__ . '/../../inventory/diagnostics/services/backend/diagnostics_redis.php')) {
+    echo "SKIP: Redis backend removed in favor of pure database queue.\n";
+    exit(0);
+}
 require __DIR__ . '/../../inventory/diagnostics/services/backend/diagnostics_redis.php';
 $config=['base_path'=>'icct-redis-test-'.bin2hex(random_bytes(8))];
 if(icct_backend_diag_redis(['PING'])!=='PONG')throw new Exception('Local Redis unavailable');

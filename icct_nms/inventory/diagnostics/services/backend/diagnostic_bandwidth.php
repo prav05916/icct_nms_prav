@@ -1,7 +1,7 @@
 <?php
+
 /** ICCT-owned diagnostic bandwidth services, derived from the existing ICCT NMS implementation. */
 
-/** Reused Inventory service: diag address in interfaces. */
 function icct_backend_diag_address_in_interfaces($target, array $interfaces)
 {
     $packed = @inet_pton($target);
@@ -21,7 +21,6 @@ function icct_backend_diag_address_in_interfaces($target, array $interfaces)
     return false;
 }
 
-/** Reused Inventory service: diag collector address. */
 function icct_backend_diag_collector_address($target)
 {
     if (icct_backend_diag_iperf_loopback($target)) {
@@ -40,11 +39,10 @@ function icct_backend_diag_collector_address($target)
     }
     return icct_backend_diag_address_in_interfaces(
         $target,
-        json_decode($result['stdout'] ?? '', true) ?: []
+        json_decode($result['stdout'] ?? '', true) ?: [],
     );
 }
 
-/** Reused Inventory service: diag iperf loopback. */
 function icct_backend_diag_iperf_loopback($target)
 {
     $ip = @inet_pton((string) $target);
@@ -58,19 +56,18 @@ function icct_backend_diag_iperf_loopback($target)
                     ord($ip[12]) === 127)));
 }
 
-/** Reused Inventory service: diag iperf self test. */
 function icct_backend_diag_iperf_self_test($command, $timeout)
 {
     $target = $command[2];
     if (!icct_backend_diag_collector_address($target)) {
         throw new RuntimeException(
-            'Local self-tests require a loopback or assigned collector IP address.'
+            'Local self-tests require a loopback or assigned collector IP address.',
         );
     }
     $timer = icct_backend_diag_program('timeout');
     if (!$timer) {
         throw new RuntimeException(
-            'A bounded local self-test requires the collector timeout executable.'
+            'A bounded local self-test requires the collector timeout executable.',
         );
     }
     $address = strpos($target, ':') !== false ? '[' . $target . ']' : $target;
@@ -94,7 +91,7 @@ function icct_backend_diag_iperf_self_test($command, $timeout)
         $target,
         '-p',
         $port,
-        '--forceflush'
+        '--forceflush',
     ];
     $process = @proc_open(
         $server,
@@ -102,7 +99,7 @@ function icct_backend_diag_iperf_self_test($command, $timeout)
         $pipes,
         null,
         null,
-        ['bypass_shell' => true]
+        ['bypass_shell' => true],
     );
     if (!is_resource($process)) {
         throw new RuntimeException('Cannot start the temporary iPerf3 self-test server.');
@@ -121,7 +118,7 @@ function icct_backend_diag_iperf_self_test($command, $timeout)
             }
             if (!proc_get_status($process)['running']) {
                 throw new RuntimeException(
-                    'The temporary iPerf3 server could not start: ' . trim($stderr)
+                    'The temporary iPerf3 server could not start: ' . trim($stderr),
                 );
             }
             usleep(20000);
@@ -146,13 +143,12 @@ function icct_backend_diag_iperf_self_test($command, $timeout)
     }
 }
 
-/** Reused Inventory service: diag netperf self test. */
 function icct_backend_diag_netperf_self_test($command, $timeout)
 {
     $target = $command[2];
     if (!icct_backend_diag_collector_address($target)) {
         throw new RuntimeException(
-            'Local self-tests require a loopback or assigned collector IP address.'
+            'Local self-tests require a loopback or assigned collector IP address.',
         );
     }
     $binary = icct_backend_diag_program('netserver');
@@ -162,7 +158,7 @@ function icct_backend_diag_netperf_self_test($command, $timeout)
     $timer = icct_backend_diag_program('timeout');
     if (!$timer) {
         throw new RuntimeException(
-            'A bounded local self-test requires the collector timeout executable.'
+            'A bounded local self-test requires the collector timeout executable.',
         );
     }
     $address = strpos($target, ':') !== false ? '[' . $target . ']' : $target;
@@ -185,7 +181,7 @@ function icct_backend_diag_netperf_self_test($command, $timeout)
         '-L',
         $target,
         '-p',
-        $port
+        $port,
     ];
     $process = @proc_open(
         $server,
@@ -193,7 +189,7 @@ function icct_backend_diag_netperf_self_test($command, $timeout)
         $pipes,
         null,
         null,
-        ['bypass_shell' => true]
+        ['bypass_shell' => true],
     );
     if (!is_resource($process)) {
         throw new RuntimeException('Cannot start the temporary Netperf self-test server.');
@@ -214,7 +210,7 @@ function icct_backend_diag_netperf_self_test($command, $timeout)
             }
             if (!proc_get_status($process)['running']) {
                 throw new RuntimeException(
-                    'The temporary Netperf server could not start: ' . trim($stderr)
+                    'The temporary Netperf server could not start: ' . trim($stderr),
                 );
             }
             usleep(20000);

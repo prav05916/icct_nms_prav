@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CSV controller: export permitted saved inventory with spreadsheet formula protection.
  */
@@ -8,6 +9,20 @@ require_once dirname(__DIR__, 2) . '/shared/services/bootstrap.php';
 require_once dirname(__DIR__, 2) . '/inventory/services/inventory.php';
 try {
     icct_nms_backend();
+    if (isset($_GET['syslog'])) {
+        $id = icct_nms_id($_GET['id'] ?? 0);
+        icct_nms_device($id);
+        require_once dirname(__DIR__, 2) . '/protocols/syslog/services/syslog_history_export.php';
+        icct_nms_syslog_export_history($id, $_GET);
+        exit();
+    }
+    if (isset($_GET['ntp'])) {
+        $id = icct_nms_id($_GET['id'] ?? 0);
+        icct_backend_require_device_access($id);
+        require_once dirname(__DIR__, 2) . '/protocols/ntp/services/ntp_history.php';
+        icct_nms_ntp_export_history($id, $_GET);
+        exit();
+    }
     $devices = icct_nms_inventory();
 } catch (Throwable $e) {
     icct_nms_failure($e);
@@ -25,19 +40,19 @@ fputcsv(
         'Segment',
         'Device Type',
         'Status',
-        'Manual Serial Number',
-        'Manual MAC Address',
+        'Serial Number',
+        'MAC Address',
         'Hostname/IP',
         'Rack',
         'Start Unit',
         'Height',
         'Uptime',
         'Polling Interval (sec)',
-        'Availability (%)'
+        'Availability (%)',
     ],
     ',',
     '"',
-    ''
+    '',
 );
 foreach ($devices as $d) {
     $values = [
@@ -47,7 +62,7 @@ foreach ($devices as $d) {
         $d['segment'],
         $d['device_type'],
         $d['status_label'],
-        $d['manual_serial_number'],
+        $d['serial_number'],
         $d['mac_address'],
         $d['hostname'],
         $d['rack_name'],
@@ -55,7 +70,7 @@ foreach ($devices as $d) {
         $d['unit_height'],
         icct_nms_uptime($d['snmp_sysUpTimeInstance']),
         $d['polling_interval'],
-        $d['availability']
+        $d['availability'],
     ];
     $values = array_map(static function ($v) {
         $v = (string) $v;

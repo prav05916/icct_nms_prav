@@ -1,7 +1,7 @@
 <?php
+
 /** ICCT-owned core form options services, derived from the existing ICCT NMS implementation. */
 
-/** Reused Inventory service: core field choices. */
 function icct_backend_core_field_choices($field)
 {
     $choices = [];
@@ -24,7 +24,6 @@ function icct_backend_core_field_choices($field)
     return $choices;
 }
 
-/** Reused Inventory service: core field value. */
 function icct_backend_core_field_value($name, $field, $value)
 {
     if (!is_scalar($value)) {

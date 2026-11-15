@@ -4,6 +4,19 @@
  * Pure PHP, zero external dependencies, RHEL 9.4 offline compatible.
  */
 
+if (!function_exists('icct_nms_ntp_validate')) {
+    function icct_nms_ntp_validate(array $input): array {
+        $out = [];
+        $out['server'] = trim((string) ($input['server'] ?? ''));
+        $out['port'] = isset($input['port']) ? (int) $input['port'] : 123;
+        $out['version'] = (string) ($input['version'] ?? '4');
+        $out['timeout'] = isset($input['timeout']) ? (int) $input['timeout'] : 5;
+        $out['poll_interval'] = isset($input['poll_interval']) ? (int) $input['poll_interval'] : 64;
+        $out['maximum_offset'] = isset($input['maximum_offset']) ? (int) $input['maximum_offset'] : 500;
+        return $out;
+    }
+}
+
 /**
  * Perform a live NTP UDP query (RFC 5905).
  * Sends a 48-byte Mode 3 (Client) request and unpacks the 48-byte Mode 4 (Server) response.
@@ -463,4 +476,94 @@ function icct_nms_ntp_export_json(): string {
         'total_devices' => count($devices),
         'devices'       => $devices,
     ], JSON_PRETTY_PRINT);
+}
+
+/**
+ * Return current NTP observation sample for a device (FCAPS & Dashboard integration).
+ */
+function icct_nms_ntp_current(int $hostId): array {
+    if (!function_exists('db_fetch_row_prepared')) {
+        return ['status' => 'Not configured', 'attempted_epoch' => null, 'last_success' => null, 'sample' => null];
+    }
+    $status = icct_nms_ntp_status($hostId, false);
+    if (empty($status) || empty($status['enabled'])) {
+        return ['status' => 'Not configured', 'attempted_epoch' => null, 'last_success' => null, 'sample' => null];
+    }
+    $st = $status['status'] ?? 'unknown';
+    $lastPolled = $status['last_polled'] ?? null;
+    $epoch = $lastPolled ? strtotime($lastPolled) : null;
+    $sync = !empty($status['synchronized']) || $st === 'synced' || $st === 'good';
+    $stratum = isset($status['stratum']) ? (int)$status['stratum'] : null;
+    $offset = isset($status['offset_ms']) ? (float)$status['offset_ms'] : null;
+    $jitter = isset($status['jitter_ms']) ? (float)$status['jitter_ms'] : null;
+    $delay  = isset($status['delay_ms']) ? (float)$status['delay_ms'] : null;
+
+    $sample = [
+        'source_address'  => $status['selected_source'] ?? $status['target_address'] ?? null,
+        'synchronized'    => $sync,
+        'stratum'         => $stratum,
+        'offset_ms'       => $offset,
+        'rms_offset_ms'   => $offset !== null ? abs($offset) : null,
+        'root_delay_ms'   => $delay,
+        'jitter_ms'       => $jitter,
+        'peer_delay_ms'   => $delay,
+    ];
+
+    $mappedStatus = 'Synchronized';
+    if ($st === 'unreachable') {
+        $mappedStatus = 'Unavailable';
+    } elseif ($st === 'stale') {
+        $mappedStatus = 'Stale';
+    } elseif ($st === 'disabled') {
+        $mappedStatus = 'Disabled';
+    } elseif ($st === 'unknown' || !$lastPolled) {
+        $mappedStatus = 'Not collected';
+    } elseif (!$sync) {
+        $mappedStatus = 'Unavailable';
+    }
+
+    return [
+        'status'          => $mappedStatus,
+        'attempted_epoch' => $epoch,
+        'last_success'    => $lastPolled,
+        'sample'          => $sample,
+    ];
+}
+
+/**
+ * Return NTP device assignment configuration.
+ */
+function icct_nms_ntp_assignment(int $hostId): array {
+    if (!function_exists('db_fetch_row_prepared')) return [];
+    $row = db_fetch_row_prepared(
+        'SELECT * FROM plugin_icct_nms_ntp_devices WHERE host_id = ?',
+        [$hostId]
+    );
+    return $row ?: [];
+}
+
+/**
+ * Return allowed fields for NTP protocol form.
+ */
+function icct_nms_ntp_fields(): array {
+    return ['ntp_server', 'ntp_mode', 'stratum', 'reference_id', 'offset_ms', 'jitter_ms', 'delay_ms', 'poll_interval', 'timeout_seconds', 'maximum_offset_ms', 'expected_source'];
+}
+
+/**
+ * Extract NTP form values from POST data.
+ */
+function icct_nms_ntp_form_values(array $post): array {
+    return [
+        'ntp_server'        => trim((string)($post['ntp_server'] ?? $post['target_address'] ?? '')),
+        'ntp_mode'          => trim((string)($post['ntp_mode'] ?? 'server')),
+        'stratum'           => (int)($post['stratum'] ?? 2),
+        'reference_id'      => trim((string)($post['reference_id'] ?? 'GPS')),
+        'offset_ms'         => (float)($post['offset_ms'] ?? 0.0),
+        'jitter_ms'         => (float)($post['jitter_ms'] ?? 0.0),
+        'delay_ms'          => (float)($post['delay_ms'] ?? 0.0),
+        'poll_interval'     => (int)($post['poll_interval'] ?? 300),
+        'timeout_seconds'   => (int)($post['timeout_seconds'] ?? 3),
+        'maximum_offset_ms' => (float)($post['maximum_offset_ms'] ?? 100.0),
+        'expected_source'   => trim((string)($post['expected_source'] ?? '')),
+    ];
 }

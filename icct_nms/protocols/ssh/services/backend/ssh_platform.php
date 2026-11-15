@@ -1,7 +1,7 @@
 <?php
+
 /** ICCT-owned ssh platform services, derived from the existing ICCT NMS implementation. */
 
-/** Reused Inventory service: ssh absolute path. */
 function icct_backend_ssh_absolute_path($path, $family = null)
 {
     $family = $family ?? PHP_OS_FAMILY;
@@ -21,7 +21,6 @@ function icct_backend_ssh_absolute_path($path, $family = null)
     return $path[0] === '/' && !preg_match('~(?:^|/)\.{1,2}(?:/|$)~', $path);
 }
 
-/** Reused Inventory service: ssh rpc cipher. */
 function icct_backend_ssh_rpc_cipher($payload, $c, $decrypt = false, $context = 'request')
 {
     $key = file_get_contents($c['rpc_key']);
@@ -38,7 +37,7 @@ function icct_backend_ssh_rpc_cipher($payload, $c, $decrypt = false, $context = 
             OPENSSL_RAW_DATA,
             $iv,
             $tag,
-            'nms-ssh-rpc-v1:' . $context
+            'nms-ssh-rpc-v1:' . $context,
         );
         if ($cipher === false) {
             throw new RuntimeException('RPC encryption failed.');
@@ -56,7 +55,7 @@ function icct_backend_ssh_rpc_cipher($payload, $c, $decrypt = false, $context = 
         OPENSSL_RAW_DATA,
         substr($data, 0, 12),
         substr($data, 12, 16),
-        'nms-ssh-rpc-v1:' . $context
+        'nms-ssh-rpc-v1:' . $context,
     );
     if ($plain === false) {
         throw new RuntimeException('Local RPC authentication failed.');
@@ -64,7 +63,6 @@ function icct_backend_ssh_rpc_cipher($payload, $c, $decrypt = false, $context = 
     return $plain;
 }
 
-/** Reused Inventory service: ssh windows identity. */
 function icct_backend_ssh_windows_identity($path = null)
 {
     if (PHP_OS_FAMILY !== 'Windows') {
@@ -86,7 +84,7 @@ function icct_backend_ssh_windows_identity($path = null)
         '-ExecutionPolicy',
         'Bypass',
         '-File',
-        ICCT_NMS_ROOT . '/protocols/ssh/windows-acl.ps1'
+        ICCT_NMS_ROOT . '/protocols/ssh/windows-acl.ps1',
     ];
     if ($path !== null) {
         $args[] = '-InspectPath';
@@ -99,8 +97,8 @@ function icct_backend_ssh_windows_identity($path = null)
         null,
         null,
         [
-            'bypass_shell' => true
-        ]
+            'bypass_shell' => true,
+        ],
     );
     if (!is_resource($p)) {
         throw new RuntimeException('Windows ACL inspection unavailable.');

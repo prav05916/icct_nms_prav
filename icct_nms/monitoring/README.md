@@ -16,6 +16,7 @@ Complete architecture, backend data flow, UI navigation, RHEL 9.4 offline setup,
 8. [Testing on RHEL 9.4](#8-testing-on-rhel-94)
 9. [Automated Unit Tests](#9-automated-unit-tests)
 10. [Troubleshooting](#10-troubleshooting)
+11. [Syslog & Event Monitoring](#11-syslog--event-monitoring--complete-working-flow--architecture)
 
 ---
 
@@ -621,33 +622,136 @@ After setup and testing, verify each section:
 
 ---
 
-## 9. Automated Unit Tests
+## 7. Syslog — Complete Working Flow
 
-Run from the plugin root directory. All tests use lightweight PHP stubs — no database, network, or external test runner required.
+### Architecture: External Receiver + Protected Spool + CLI Worker + Cacti Console
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  STEP 1: NETWORK RECEPTION (rsyslog on RHEL)                     │
+│                                                                  │
+│  Listens on: UDP 514 and TCP 514                                 │
+│  Config: /etc/rsyslog.d/00-icct-nms.conf                         │
+│  When a syslog message arrives from a device:                    │
+│    rsyslog formats it into newline-delimited JSON (NDJSON)       │
+│    Writes to protected spool: /var/log/icct-nms/remote.ndjson    │
+│    Permissions: root:apache 640                                  │
+└──────────────────┬───────────────────────────────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  STEP 2: CLI INGESTION WORKER                                    │
+│                                                                  │
+│  Service: icct-nms-syslog-worker.service                         │
+│  Script: protocols/syslog/cli/syslog_worker.php                  │
+│  Runs as: apache user                                            │
+│                                                                  │
+│  Processing pipeline:                                            │
+│    1. Reads line from /var/log/icct-nms/remote.ndjson            │
+│    2. Maps source IP / hostname to Cacti device via              │
+│       plugin_icct_nms_syslog_devices table                       │
+│    3. Evaluates per-device filters:                              │
+│       • Max severity threshold                                   │
+│       • Allowed facility codes                                   │
+│       • Match string patterns                                    │
+│    4. SHA-256 Fingerprint calculation:                           │
+│       hash('sha256', "$hostId|$facilityCode|$severityCode|...")  │
+│    5. Sliding-window deduplication (syslog_dedupe_seconds):      │
+│       If matching fingerprint seen within window:                │
+│         → UPDATE repeat_count = repeat_count + 1                 │
+│       Else:                                                      │
+│         → INSERT new event row                                   │
+│    6. Persists ingestion cursor (inode, offset, timestamp)       │
+│       in plugin_icct_nms_syslog_ingest_state table                │
+└──────────────────┬───────────────────────────────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  STEP 3: DATABASE STORAGE                                        │
+│                                                                  │
+│  Table: plugin_icct_nms_syslog_events                            │
+│    Columns:                                                      │
+│      • id (BIGINT AUTO_INCREMENT)                                │
+│      • host_id (INT → links to cacti host.id)                    │
+│      • event_origin ('syslog' or 'availability')                 │
+│      • event_time (DATETIME, device-reported time)               │
+│      • received_at (DATETIME, local reception time)              │
+│      • last_seen (DATETIME, updated on duplicates)               │
+│      • source_ip (VARCHAR(45))                                   │
+│      • source_host (VARCHAR(255))                                │
+│      • facility_code / facility (INT / VARCHAR)                  │
+│      • severity_code / severity (INT / VARCHAR)                  │
+│      • nms_severity ('critical', 'major', 'warning', 'info')     │
+│      • program (VARCHAR(64), e.g. BGP, OSPF, KERNEL)             │
+│      • message (TEXT, raw event text)                            │
+│      • fingerprint (CHAR(64))                                    │
+│      • repeat_count (INT DEFAULT 1)                              │
+└──────────────────┬───────────────────────────────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  STEP 4: UI EVENT CONSOLE                                        │
+│                                                                  │
+│  Global Console: protocols/syslog/controllers/syslog.php         │
+│  Per-Device Tab: inventory/controllers/device.php?id=N#syslog    │
+│                                                                  │
+│  Features:                                                       │
+│    • Severity filter: Emergency, Alert, Critical, Error,         │
+│      Warning, Notice, Info, Debug                                │
+│    • Search filter: Real-time substring filter on message/host   │
+│    • Live auto-refresh: Polls every 10 seconds via AJAX          │
+│    • Repeat count badge: Aggregated count shown next to event    │
+│    • HTML escaping: All message and hostname strings escaped     │
+│    • CSV/JSON export: One-click export of filtered event views   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 8. Automated Unit Tests
+
+Run from the plugin root directory. All tests use lightweight PHP stubs — no external database, network, or test runners required:
 
 ```bash
 cd /usr/share/cacti/plugins/icct_nms  # RHEL
 # OR
 cd c:\Apache24\htdocs\cacti\plugins\icct_nms  # Windows
 
-# NetFlow & IPFIX (v5, v7, v9, IPFIX, Anomaly Engine, Analytics)
-php shared/tests/netflow_service_test.php
-# Expected: NetFlow service tests: 68 passed, 0 failed.
-
-# NTP Monitoring (RFC 5905, History, CSV/JSON Export)
+# NTP Monitoring (RFC 5905 UDP Poller, Chrony Fallback, History, CSV/JSON)
 php shared/tests/ntp_service_test.php
 # Expected: NTP service tests: 23 passed, 0 failed.
 
-# Rack & Placement Tests
+# NetFlow & IPFIX (v5, v7, v9, IPFIX, Anomaly Detection, WAN/LAN, Reports)
+php shared/tests/netflow_service_test.php
+# Expected: NetFlow service tests: 68 passed, 0 failed.
+
+# Syslog Subsystem Tests
+php shared/tests/syslog_service_test.php
+# Expected: Syslog policy, severity, dedupe, and storage failure tests passed.
+
+php shared/tests/syslog_pipeline_test.php
+# Expected: Syslog NDJSON spool -> mapping -> filter -> dedupe -> storage cursor -> rotation pipeline tests passed.
+
+php shared/tests/syslog_views_test.php
+# Expected: Syslog preset, device setup and read-only view rendering passed.
+
+php shared/tests/syslog_availability_test.php
+# Expected: PASS: automatic Cacti availability -> Syslog/Event console transition tests.
+
+php shared/tests/syslog_assignment_test.php
+php shared/tests/syslog_event_query_test.php
+
+# Core Layout, Permissions, and Dashboard Integrity
+php shared/tests/feature_paths_test.php
+php shared/tests/dashboard_sync_test.php
+php shared/tests/alarm_service_test.php
+php shared/tests/topology_view_test.php
 php shared/tests/rack_unit_count_test.php
 php shared/tests/device_view_placement_test.php
 php shared/tests/rack_placement_test.php
-
-# Feature Paths & Permission Registration
-php shared/tests/feature_paths_test.php
 ```
 
-**All tests must show 0 failures before deployment.**
+**All 15 core protocol & integration tests must pass with 0 failures.**
 
 ---
 
@@ -680,3 +784,61 @@ If you see a directory listing, clear your browser cache (Ctrl+Shift+R).
 ### Database tables missing
 
 Re-enable the plugin in Cacti → Configuration → Plugin Management → Disable then Enable `icct_nms`. The `setup.php` will recreate missing tables.
+
+---
+
+## 11. Syslog & Event Monitoring — Complete Working Flow & Architecture
+
+### Step-by-Step: From Ingestion to Display
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  STEP 1: SYSLOG RECEPTION & SPOOLING (RHEL 9.4 / rsyslog)        │
+│                                                                  │
+│  External network devices send Syslog (RFC 3164 / 5424 UDP/TCP)  │
+│  rsyslog receives messages on port 514 and spools to NDJSON:     │
+│    /var/log/icct-nms/syslog-spool.ndjson                         │
+│                                                                  │
+│  Configured via:                                                 │
+│    protocols/syslog/rhel/30-icct-nms.conf.example                │
+└──────────────────┬───────────────────────────────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  STEP 2: INGESTION WORKER & NORMALIZATION                        │
+│                                                                  │
+│  syslog_worker.php runs via systemd timer (icct-nms-syslog-worker)│
+│    1. Reads NDJSON spool from cursor position                    │
+│    2. Normalizes timestamps, facility, severity (RFC 5424)       │
+│    3. Matches host against Cacti inventory by IP / hostname      │
+│    4. Applies device-specific keyword & facility filters         │
+│    5. Correlates with active alarm rules                         │
+│                                                                  │
+│  Stored in database:                                             │
+│    plugin_icct_nms_syslog_events                                 │
+│    plugin_icct_nms_syslog_devices                                │
+└──────────────────┬───────────────────────────────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  STEP 3: UI CONTROLLER & REPORTING                               │
+│                                                                  │
+│  Global Syslog Console:                                          │
+│    protocols/syslog/controllers/syslog.php                       │
+│    - Severity distribution donut chart                           │
+│    - Real-time search, facility filter, date range filter        │
+│    - CSV / JSON export of filtered events                        │
+│                                                                  │
+│  Per-Device Syslog Tab (in Device View):                         │
+│    protocols/syslog/templates/device_view_syslog.php             │
+│    - Filtered specifically to the selected host_id               │
+│    - Full pagination, keyword search, severity badges            │
+│    - Correlated Cacti availability state transitions             │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Database Tables:
+- `plugin_icct_nms_syslog_devices`: Configured per-device Syslog parameters, enabled state, source IPs, filter rules.
+- `plugin_icct_nms_syslog_events`: Persistent event log with indexed `host_id`, `facility`, `severity`, `event_time`, and deduplicated counter.
+- `plugin_icct_nms_syslog_cursors`: Byte-offset cursors ensuring zero duplicate processing across worker iterations.
+

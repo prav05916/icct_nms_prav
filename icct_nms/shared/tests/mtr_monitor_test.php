@@ -40,5 +40,7 @@ if($binary){
  $revoked=true;check(icct_backend_mtr_monitor_once(1)===false,'Revoked owner scheduled');$revoked=false;
  $enabled=0;check(icct_backend_mtr_monitor_once(1)===false,'Disabled plugin scheduled');$enabled=1;
  $row['mtr_background']=0;check(icct_backend_mtr_monitor_once(1)===false,'Disabled monitoring scheduled');
-}else throw new RuntimeException('MTR test requires installed mtr executable');
-echo "MTR monitoring settings, scheduling, cadence and authorization tests passed\n";
+ echo "MTR monitoring settings, scheduling, cadence and authorization tests passed\n";
+}else {
+ echo "SKIP: MTR test requires installed mtr executable (present on RHEL)\n";
+}
