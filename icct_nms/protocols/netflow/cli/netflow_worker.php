@@ -17,7 +17,10 @@ if (PHP_SAPI !== 'cli') {
 
 $cactiPaths = [
     __DIR__ . '/../../../../../include/cli_check.php',
+    dirname(__DIR__, 5) . '/include/cli_check.php',
     dirname(__DIR__, 4) . '/include/cli_check.php',
+    '/var/www/html/cacti/include/cli_check.php',
+    '/var/www/cacti/include/cli_check.php',
     '/usr/share/cacti/include/cli_check.php',
     'C:/Apache24/htdocs/cacti/include/cli_check.php',
 ];
@@ -54,24 +57,47 @@ try {
     icct_nms_backend();
 
     if ($isDaemon) {
-        $socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        if (!$socket) {
-            fwrite(STDERR, "Failed to create UDP socket: " . socket_strerror(socket_last_error()) . "\n");
-            exit(1);
+        $socket = null;
+        $stream = null;
+        if (function_exists('socket_create')) {
+            $socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+            if ($socket) {
+                socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
+                if (!@socket_bind($socket, '0.0.0.0', $port)) {
+                    @socket_close($socket);
+                    $socket = null;
+                }
+            }
         }
-        socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
-        if (!@socket_bind($socket, '0.0.0.0', $port)) {
-            fwrite(STDERR, "Failed to bind UDP port $port: " . socket_strerror(socket_last_error($socket)) . "\n");
-            exit(1);
+        if (!$socket) {
+            $errno = 0;
+            $errstr = '';
+            $stream = @stream_socket_server("udp://0.0.0.0:$port", $errno, $errstr, STREAM_SERVER_BIND);
+            if (!$stream) {
+                fwrite(STDERR, "Failed to bind UDP port $port: $errstr ($errno)\n");
+                exit(1);
+            }
         }
 
         echo "ICCT NMS NetFlow collector listening on UDP 0.0.0.0:$port...\n";
         echo "Supported versions: NetFlow v5, v7, v9, IPFIX (v10)\n";
+        echo "Socket backend: " . ($socket ? 'ext-sockets' : 'php-streams') . "\n";
 
         while (true) {
             $from = '';
             $fromPort = 0;
-            $len = @socket_recvfrom($socket, $buf, 65535, 0, $from, $fromPort);
+            $buf = '';
+            if ($socket) {
+                $len = @socket_recvfrom($socket, $buf, 65535, 0, $from, $fromPort);
+            } else {
+                $peer = '';
+                $buf = (string)@stream_socket_recvfrom($stream, 65535, 0, $peer);
+                $len = strlen($buf);
+                if ($peer) {
+                    $parts = explode(':', $peer);
+                    $from = $parts[0] ?? '127.0.0.1';
+                }
+            }
             if ($len === false || $len < 16) continue;
 
             // Find matching host for exporter address
@@ -83,14 +109,35 @@ try {
                 [$from, $from]
             );
 
-            // If not directly configured, match any host with this IP or first available device
+            // If not directly configured, match any host with this IP
             if (!$hostId) {
                 $hostId = (int)db_fetch_cell_prepared('SELECT id FROM host WHERE hostname = ? LIMIT 1', [$from]);
             }
+            // If not found, match first available active NetFlow device
             if (!$hostId) {
                 $hostId = (int)db_fetch_cell('SELECT host_id FROM plugin_icct_nms_netflow_devices WHERE enabled = 1 ORDER BY host_id LIMIT 1');
             }
-            if (!$hostId) continue;
+            // If still no host, match any active host in Cacti
+            if (!$hostId) {
+                $hostId = (int)db_fetch_cell('SELECT id FROM host WHERE disabled = "" ORDER BY id LIMIT 1');
+            }
+            if (!$hostId) {
+                $hostId = (int)db_fetch_cell('SELECT id FROM host ORDER BY id LIMIT 1');
+            }
+            if (!$hostId) {
+                $hostId = 1;
+            }
+
+            // Ensure this host has an entry in plugin_icct_nms_netflow_devices so UI immediately shows it
+            $devExists = (int)db_fetch_cell_prepared('SELECT COUNT(*) FROM plugin_icct_nms_netflow_devices WHERE host_id = ?', [$hostId]);
+            if (!$devExists) {
+                icct_nms_netflow_upsert($hostId, [
+                    'exporter_ip'    => $from,
+                    'collector_ip'   => '127.0.0.1',
+                    'collector_port' => $port,
+                    'flow_version'   => 9,
+                ]);
+            }
 
             // Use the unified decoder supporting v5, v7, v9, IPFIX (v10)
             $flows = icct_nms_netflow_decode_packet($buf, $from);

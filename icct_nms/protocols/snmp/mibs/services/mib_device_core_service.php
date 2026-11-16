@@ -124,6 +124,8 @@ function icct_mib_device_core_defaults($bundle, $records)
             $name = $native['name'];
             $class = $native['class'] ?? '';
         }
+    } elseif (function_exists('icct_mib_unique_template_name')) {
+        $name = icct_mib_unique_template_name($bundle['name'], 'host_template');
         $queries = array_map(
             'intval',
             array_column(

@@ -113,8 +113,8 @@
                             </form>
                         </td>
                         <td>
-                            <span class="<?= (int) $query['item_count'] ? 'graph-status' : 'query-empty' ?>"><?= (int) $query['item_count'] ? 'Success' : 'No cached data' ?></span> [<?= (int) $query['item_count'] ?> Items,
-                            <?= (int) $query['row_count'] ?> Rows]
+                            <span class="<?= (int) ($query['item_count'] ?? 0) ? 'graph-status' : 'query-empty' ?>"><?= (int) ($query['item_count'] ?? 0) ? 'Success' : 'No cached data' ?></span> [<?= (int) ($query['item_count'] ?? 0) ?> Items,
+                            <?= (int) ($query['row_count'] ?? 0) ?> Rows]
                         </td>
                         <td>
                             <div class="query-actions">

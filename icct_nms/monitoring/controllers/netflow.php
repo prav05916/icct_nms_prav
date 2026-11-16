@@ -29,9 +29,23 @@ if (isset($_GET['export'])) {
 
 try {
     icct_nms_backend();
+    $forceSample = isset($_GET['sample']) || isset($_GET['poll']) || isset($_GET['refresh']);
+    $netflowDevices = icct_nms_netflow_all($forceSample || true);
+
+    if (isset($_GET['ajax']) || (isset($_GET['format']) && $_GET['format'] === 'json_api')) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok'        => true,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'devices'   => $netflowDevices,
+            'top_hosts' => icct_nms_netflow_top_hosts(0, 15),
+            'anomalies' => icct_nms_netflow_anomalies(0, 10),
+        ], JSON_INVALID_UTF8_SUBSTITUTE);
+        exit;
+    }
+
     $title = 'NetFlow Monitoring';
     require dirname(__DIR__, 2) . '/shared/templates/header.php';
-    $netflowDevices = icct_nms_netflow_all();
     require dirname(__DIR__, 2) . '/monitoring/templates/netflow_view.php';
     require dirname(__DIR__, 2) . '/shared/templates/footer.php';
 } catch (Throwable $e) {

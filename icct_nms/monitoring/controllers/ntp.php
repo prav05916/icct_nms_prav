@@ -27,9 +27,17 @@ if (isset($_GET['export'])) {
 
 try {
     icct_nms_backend();
+    $forceRefresh = isset($_GET['poll']) || isset($_GET['refresh']);
+    $ntpDevices = icct_nms_ntp_all($forceRefresh || true);
+
+    if (isset($_GET['ajax']) || (isset($_GET['format']) && $_GET['format'] === 'json_api')) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true, 'timestamp' => date('Y-m-d H:i:s'), 'devices' => $ntpDevices], JSON_INVALID_UTF8_SUBSTITUTE);
+        exit;
+    }
+
     $title = 'NTP Monitoring';
     require dirname(__DIR__, 2) . '/shared/templates/header.php';
-    $ntpDevices = icct_nms_ntp_all();
     require dirname(__DIR__, 2) . '/monitoring/templates/ntp_view.php';
     require dirname(__DIR__, 2) . '/shared/templates/footer.php';
 } catch (Throwable $e) {

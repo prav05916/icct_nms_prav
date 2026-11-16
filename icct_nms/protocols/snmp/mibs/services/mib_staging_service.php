@@ -29,6 +29,7 @@ function icct_mib_staging_plan($bundle, $draft, $stage = 4)
         'create_graph' => $stage >= 3 ? 1 : 0,
         'create_device' => $stage === 4 ? 1 : 0,
         'preparation_stage' => $stage,
+        'saved_edit' => !empty($draft['saved_edit']),
     ];
     $plan = icct_mib_plan(
         ['records' => icct_mib_objects($bundle), 'parse_error' => $bundle['parse_error'] ?? ''],
@@ -85,8 +86,12 @@ function icct_mib_staging_plan($bundle, $draft, $stage = 4)
             $chosen,
             (bool) $queries,
         );
+        $rawDeviceName = $draft['device_template']['name'] ?? $defaults['name'];
+        $deviceName = empty($bundle['host_template_id']) && function_exists('icct_mib_unique_template_name')
+            ? icct_mib_unique_template_name($rawDeviceName, 'host_template')
+            : $rawDeviceName;
         $plan['device_template'] = icct_mib_device_details(
-            $draft['device_template']['name'] ?? $defaults['name'],
+            $deviceName,
             $draft['device_template']['class'] ?? '' ?: $defaults['class'],
         ) +
             $selection + ['queries' => $queries];
@@ -228,6 +233,19 @@ function icct_mib_staging_generate($id, $token, $stage, $emit)
     $work['results'][$stage] = $results;
     $work['plans'][$stage] = $plan;
     $_SESSION['icct_mib_generation_' . $token]['work'] = $work;
+    if (isset($_SESSION['icct_mib_generation_' . $token]['review']['values'])) {
+        $objects = icct_mib_objects($bundle);
+        $indexes = array_flip(array_column($objects, 'symbol'));
+        foreach ($plan['records'] as $record) {
+            $idx = $indexes[$record['symbol']] ?? null;
+            if ($idx !== null) {
+                $_SESSION['icct_mib_generation_' . $token]['review']['values']['records'][$idx]['data_name'] = $record['data_name'];
+                if (!empty($record['graph_name'])) {
+                    $_SESSION['icct_mib_generation_' . $token]['review']['values']['records'][$idx]['graph_name'] = $record['graph_name'];
+                }
+            }
+        }
+    }
     if ($stage === 2) {
         unset($_SESSION['icct_mib_generation_' . $token]['selection_changed']);
     }

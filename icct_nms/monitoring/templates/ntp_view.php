@@ -25,8 +25,19 @@ function icct_nms_ntp_offset_class(?float $offset): string {
     return 'ntp-offset-crit';
 }
 ?>
-<div class="titlebar">
+<div class="titlebar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
     <h1><?= icct_nms_h($title) ?></h1>
+    <div style="display:flex;align-items:center;gap:10px">
+        <span id="ntp-live-indicator" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#27ae60">
+            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#27ae60;box-shadow:0 0 6px #27ae60"></span>
+            LIVE REAL-TIME
+        </span>
+        <button type="button" id="ntp-refresh-btn" class="ui-button ui-corner-all" style="font-size:12px;padding:3px 10px" onclick="location.href='monitoring/controllers/ntp.php?poll=1'">Poll Now ⟳</button>
+        <label style="font-size:12px;color:#555;display:inline-flex;align-items:center;gap:4px">
+            <input type="checkbox" id="ntp-autorefresh-toggle" checked>
+            Auto-refresh (15s): <span id="ntp-countdown" style="font-weight:bold">15</span>s
+        </label>
+    </div>
 </div>
 
 <div class="site-table-controls">
@@ -119,18 +130,33 @@ function icct_nms_ntp_offset_class(?float $offset): string {
     var input = document.getElementById('ntp-search');
     var count = document.getElementById('ntp-count');
     var table = document.getElementById('ntp-table');
-    if (!input || !table) return;
-    input.addEventListener('input', function () {
-        var q = input.value.toLowerCase();
-        var rows = table.querySelectorAll('tbody tr');
-        var visible = 0;
-        rows.forEach(function (row) {
-            var text = (row.dataset.filterText || '');
-            var show = !q || text.includes(q);
-            row.hidden = !show;
-            if (show) visible++;
+    if (input && table) {
+        input.addEventListener('input', function () {
+            var q = input.value.toLowerCase();
+            var rows = table.querySelectorAll('tbody tr');
+            var visible = 0;
+            rows.forEach(function (row) {
+                var text = (row.dataset.filterText || '');
+                var show = !q || text.includes(q);
+                row.hidden = !show;
+                if (show) visible++;
+            });
+            if (count) count.textContent = visible + ' device' + (visible !== 1 ? 's' : '');
         });
-        if (count) count.textContent = visible + ' device' + (visible !== 1 ? 's' : '');
-    });
+    }
+
+    // Real-time auto-refresh countdown
+    var countdownEl = document.getElementById('ntp-countdown');
+    var toggleEl = document.getElementById('ntp-autorefresh-toggle');
+    var seconds = 15;
+    setInterval(function () {
+        if (!toggleEl || !toggleEl.checked) return;
+        seconds--;
+        if (countdownEl) countdownEl.textContent = seconds;
+        if (seconds <= 0) {
+            seconds = 15;
+            window.location.href = 'monitoring/controllers/ntp.php?poll=1';
+        }
+    }, 1000);
 }());
 </script>

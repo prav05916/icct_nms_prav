@@ -155,11 +155,17 @@ monitoring/
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Auto-Refresh Behavior
+### Auto-Refresh & Real-Time Monitoring
 
-- When the NTP overview page loads, `icct_nms_ntp_all(true)` automatically detects devices whose `last_attempt` is older than 60 seconds.
-- These devices are re-polled in real-time via `icct_nms_ntp_poll_device()`, so the page always shows **live data**, not cached/static values.
-- The per-device NTP detail page (`device_view_ntp.php`) shows the last 25 statistical history samples from `plugin_icct_nms_ntp_history`.
+- **Live Auto-Refresh in UI**: The NTP overview page features a visual **LIVE REAL-TIME** indicator with a 15-second auto-refresh countdown and an on-demand **Poll Now ⟳** button (`?poll=1`).
+- **Real-Time Poller**: When the NTP overview page loads, `icct_nms_ntp_all(true)` automatically detects devices whose `last_attempt` is older than 60 seconds (or immediately on `?poll=1`).
+- **Auto-Seeding**: If no devices have been configured for NTP yet, the system automatically discovers existing active Cacti devices and initializes them with local / host clock targets so the table is never blank.
+- **Multi-Tiered Chrony & Clock Fallback**:
+  1. RFC 5905 UDP client query (port 123).
+  2. `chronyc tracking` command.
+  3. Sudo chrony socket tracking (`sudo -n -u chrony /usr/bin/chronyc -n -c -h /run/chrony/chronyd.sock tracking`).
+  4. Local system master clock estimation (Stratum 10) for air-gapped RHEL 9.4 without upstream servers.
+- **Statistical History**: The per-device NTP detail page (`device_view_ntp.php`) shows the last 25 statistical history samples from `plugin_icct_nms_ntp_history`.
 
 ---
 
@@ -313,11 +319,16 @@ monitoring/
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Auto-Refresh Behavior
+### Auto-Refresh & Real-Time Monitoring
 
-- When the NetFlow overview page loads, `icct_nms_netflow_all(true)` automatically detects devices whose `last_data_at` is older than 60 seconds.
-- On Linux, if the exporter is `127.0.0.1`, the system reads real data from `/proc/net/dev` and `ss -nt`.
-- On RHEL with the collector daemon running, real NetFlow datagrams from routers/switches are decoded and stored in real-time.
+- **Live Auto-Refresh in UI**: The NetFlow analytics console features a visual **LIVE REAL-TIME (UDP 2055)** indicator with a 10-second auto-refresh countdown and an on-demand **Sample Live Traffic ⟳** button (`?sample=1`).
+- **Tab State Persistence**: When the page auto-refreshes, the active tab (e.g., Top Hosts, Anomalies, WAN/LAN Trends) remains selected without reverting to the Devices tab.
+- **Dual-Mode UDP Collector Socket**:
+  - Automatically selects `ext-sockets` (`socket_create`) if available.
+  - Automatically falls back to built-in PHP stream sockets (`stream_socket_server('udp://0.0.0.0:2055')`) if `php-sockets` is not installed, guaranteeing 100% offline compatibility with zero extra RPM dependencies!
+- **Auto-Registration of Exporters**: When any network router or switch transmits NetFlow datagrams to UDP 2055, the collector automatically maps the flow to the device and registers the exporter in `plugin_icct_nms_netflow_devices` so it shows up in the UI immediately without manual pre-configuration.
+- **ON DUPLICATE KEY UPDATE State Persistence**: `icct_nms_netflow_record_flows` uses `INSERT ... ON DUPLICATE KEY UPDATE` to guarantee the state row is always updated and marked `active`.
+- **Auto-Seeding**: If no NetFlow exporters have been configured yet, the system auto-seeds existing active Cacti devices and samples live host interface traffic (`/proc/net/dev`, `ss -nt`) so that traffic analytics, protocol charts, and top talkers are visible immediately.
 
 ---
 
@@ -716,6 +727,10 @@ Run from the plugin root directory. All tests use lightweight PHP stubs — no e
 cd /usr/share/cacti/plugins/icct_nms  # RHEL
 # OR
 cd c:\Apache24\htdocs\cacti\plugins\icct_nms  # Windows
+
+# Real-Time NTP & NetFlow Subsystems Test (Dual-mode socket, Chrony fallback, Auto-seeding, Real-time refresh)
+php shared/tests/ntp_netflow_realtime_test.php
+# Expected: TEST SUMMARY: 36 passed, 0 failed. PASS: Real-Time NTP & NetFlow Subsystems fully verified!
 
 # NTP Monitoring (RFC 5905 UDP Poller, Chrony Fallback, History, CSV/JSON)
 php shared/tests/ntp_service_test.php

@@ -17,7 +17,10 @@ if (PHP_SAPI !== 'cli') {
 // Find and load Cacti cli_check
 $cactiPaths = [
     __DIR__ . '/../../../../../include/cli_check.php',
+    dirname(__DIR__, 5) . '/include/cli_check.php',
     dirname(__DIR__, 4) . '/include/cli_check.php',
+    '/var/www/html/cacti/include/cli_check.php',
+    '/var/www/cacti/include/cli_check.php',
     '/usr/share/cacti/include/cli_check.php',
     'C:/Apache24/htdocs/cacti/include/cli_check.php',
 ];

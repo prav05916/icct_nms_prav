@@ -1,5 +1,12 @@
 <?php /** Prepared graph selections remain linked to their selected MIB measurements. */
 $graphPlan = $generationWork['plans'][3] ?? ($generationWork['plans'][2] ?? null);
+if (!$graphPlan && isset($generationBundle, $readyDraft)) {
+    try {
+        $graphPlan = icct_mib_staging_plan($generationBundle, $readyDraft, 3);
+    } catch (Throwable $e) {
+        $graphPlan = null;
+    }
+}
 $objects = icct_mib_objects($generationBundle);
 $objectIndexes = array_flip(array_column($objects, 'symbol'));
 $graphSources = [];
@@ -7,7 +14,7 @@ foreach ($graphPlan['records'] ?? [] as $record) {
     $index = $objectIndexes[$record['symbol']];
     $settings = array_replace($record, $readyDraft['review']['values']['records'][$index] ?? []);
     $settings += [
-        'graph_name' => $graphPlan['name'] . ' - ' . $record['label'],
+        'graph_name' => $record['graph_name'] ?? (($graphPlan['name'] ?? $generationBundle['name']) . ' - ' . $record['label']),
         'legend' => $record['label'],
         'color' => '00CF00',
         'graph_type' => 4,

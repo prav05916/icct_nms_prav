@@ -16,8 +16,19 @@ $wanLanTrends  = icct_nms_netflow_wan_lan_trends(0, 24);
 $anomalies     = icct_nms_netflow_anomalies(0, 20);
 $overUtil      = icct_nms_netflow_overutilization_analysis(0);
 ?>
-<div class="titlebar">
+<div class="titlebar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
     <h1><?= icct_nms_h($title) ?></h1>
+    <div style="display:flex;align-items:center;gap:10px">
+        <span id="netflow-live-indicator" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#27ae60">
+            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#27ae60;box-shadow:0 0 6px #27ae60"></span>
+            LIVE REAL-TIME (UDP 2055)
+        </span>
+        <button type="button" id="netflow-refresh-btn" class="ui-button ui-corner-all" style="font-size:12px;padding:3px 10px" onclick="location.href='monitoring/controllers/netflow.php?sample=1'">Sample Live Traffic ⟳</button>
+        <label style="font-size:12px;color:#555;display:inline-flex;align-items:center;gap:4px">
+            <input type="checkbox" id="netflow-autorefresh-toggle" checked>
+            Auto-refresh (10s): <span id="netflow-countdown" style="font-weight:bold">10</span>s
+        </label>
+    </div>
 </div>
 
 <!-- Analytics Tabs -->
@@ -309,31 +320,61 @@ $overUtil      = icct_nms_netflow_overutilization_analysis(0);
 (function () {
     var tabs = document.querySelectorAll('.netflow-tab-btn');
     var panels = document.querySelectorAll('.netflow-panel');
+
+    function selectTab(tabKey) {
+        tabs.forEach(function (b) { b.classList.remove('active'); });
+        panels.forEach(function (p) { p.hidden = true; });
+        var targetBtn = document.querySelector('.netflow-tab-btn[data-tab="' + tabKey + '"]');
+        var panel = document.getElementById('panel-' + tabKey);
+        if (targetBtn && panel) {
+            targetBtn.classList.add('active');
+            panel.hidden = false;
+            sessionStorage.setItem('icct_netflow_active_tab', tabKey);
+        }
+    }
+
     tabs.forEach(function (btn) {
         btn.addEventListener('click', function () {
-            tabs.forEach(function (b) { b.classList.remove('active'); });
-            panels.forEach(function (p) { p.hidden = true; });
-            btn.classList.add('active');
-            var panel = document.getElementById('panel-' + btn.dataset.tab);
-            if (panel) panel.hidden = false;
+            selectTab(btn.dataset.tab);
         });
     });
+
+    // Restore active tab if saved
+    var savedTab = sessionStorage.getItem('icct_netflow_active_tab');
+    if (savedTab) {
+        selectTab(savedTab);
+    }
 
     var input = document.getElementById('netflow-search');
     var count = document.getElementById('netflow-count');
     var table = document.getElementById('netflow-table');
-    if (!input || !table) return;
-    input.addEventListener('input', function () {
-        var q = input.value.toLowerCase();
-        var rows = table.querySelectorAll('tbody tr');
-        var visible = 0;
-        rows.forEach(function (row) {
-            var text = (row.dataset.filterText || '');
-            var show = !q || text.includes(q);
-            row.hidden = !show;
-            if (show) visible++;
+    if (input && table) {
+        input.addEventListener('input', function () {
+            var q = input.value.toLowerCase();
+            var rows = table.querySelectorAll('tbody tr');
+            var visible = 0;
+            rows.forEach(function (row) {
+                var text = (row.dataset.filterText || '');
+                var show = !q || text.includes(q);
+                row.hidden = !show;
+                if (show) visible++;
+            });
+            if (count) count.textContent = visible + ' device' + (visible !== 1 ? 's' : '');
         });
-        if (count) count.textContent = visible + ' device' + (visible !== 1 ? 's' : '');
-    });
+    }
+
+    // Real-time auto-refresh countdown
+    var countdownEl = document.getElementById('netflow-countdown');
+    var toggleEl = document.getElementById('netflow-autorefresh-toggle');
+    var seconds = 10;
+    setInterval(function () {
+        if (!toggleEl || !toggleEl.checked) return;
+        seconds--;
+        if (countdownEl) countdownEl.textContent = seconds;
+        if (seconds <= 0) {
+            seconds = 10;
+            window.location.href = 'monitoring/controllers/netflow.php?sample=1';
+        }
+    }, 1000);
 }());
 </script>

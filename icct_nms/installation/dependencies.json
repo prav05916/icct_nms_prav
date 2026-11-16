@@ -11,6 +11,7 @@
             "php-xml",
             "php-snmp",
             "php-process",
+            "php-sockets",
             "net-snmp-utils",
             "net-snmp",
             "rrdtool",

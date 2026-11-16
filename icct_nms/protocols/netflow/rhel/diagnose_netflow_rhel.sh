@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CACTI_ROOT="${1:-/usr/share/cacti}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CACTI_DETECTED=""
+if [[ -n "${1:-}" ]]; then
+  CACTI_DETECTED="$1"
+elif [[ -f "/var/www/html/cacti/include/global.php" ]]; then
+  CACTI_DETECTED="/var/www/html/cacti"
+elif [[ -f "/usr/share/cacti/include/global.php" ]]; then
+  CACTI_DETECTED="/usr/share/cacti"
+elif [[ -f "$SCRIPT_DIR/../../../../../include/global.php" ]]; then
+  CACTI_DETECTED="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
+fi
+CACTI_ROOT="${CACTI_DETECTED:-/var/www/html/cacti}"
 PLUGIN="$CACTI_ROOT/plugins/icct_nms"
 
 echo "=== ICCT NetFlow RHEL diagnostics ==="

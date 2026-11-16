@@ -24,17 +24,29 @@ $stepperCompleted = isset($generationCompleted)
                 ($stepperToken ? '&ready=' . $stepperToken : '');
         $stepperComplete =
             ($number === 1 && $stepperToken) || ($number > 1 && $stepperCompleted >= $number - 1);
+        $maxAllowedStage = ($stepperCompleted ?? 0) + 2;
+        $canNavigate = ($number === 1) || ($number <= $stepperStage) || ($number <= $maxAllowedStage);
         ?>
-        <div class="<?= $number === $stepperStage ? 'active' : ($stepperComplete ? 'complete' : '') ?>">
-            <a
-                href="<?= icct_nms_h($stepperUrl) ?>"
-                <?= $number === $stepperStage ? 'aria-current="step"' : '' ?>>
-                <span
-                    class="mib-generation-step-icon"
-                    aria-hidden="true"></span>
-                <strong><?= $label ?></strong>
-                <small><?= $number ?>/4</small>
-            </a>
+        <div class="<?= $number === $stepperStage ? 'active' : ($stepperComplete ? 'complete' : ($canNavigate ? '' : 'disabled')) ?>">
+            <?php if ($canNavigate): ?>
+                <a
+                    href="<?= icct_nms_h($stepperUrl) ?>"
+                    <?= $number === $stepperStage ? 'aria-current="step"' : '' ?>>
+                    <span
+                        class="mib-generation-step-icon"
+                        aria-hidden="true"></span>
+                    <strong><?= $label ?></strong>
+                    <small><?= $number ?>/4</small>
+                </a>
+            <?php else: ?>
+                <span class="mib-step-disabled" title="Complete previous step first">
+                    <span
+                        class="mib-generation-step-icon"
+                        aria-hidden="true"></span>
+                    <strong><?= $label ?></strong>
+                    <small><?= $number ?>/4</small>
+                </span>
+            <?php endif; ?>
         </div>
     <?php
     endforeach; ?>

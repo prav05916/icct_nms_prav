@@ -166,7 +166,7 @@ if (!$generationDone && !$generationError) {
                     : count($generationSelected ?? []) . ' OIDs selected' ?></span>
             </div>
         <?php endif; ?>
-        <?php if ($generationReview && $generationStaged && ($generationDone || $generationStage === 3)):
+        <?php if ($generationStaged && ($generationReview || $generationDone || $generationStage >= 2)):
             require __DIR__ . '/mib_prepared_review.php';
         endif; ?>
     </form>
@@ -175,6 +175,13 @@ if (!$generationDone && !$generationError) {
         class="notice error"
         role="alert"
         <?= $generationError ? '' : 'hidden' ?>><?= icct_nms_h($generationError) ?></p>
+    <?php if ($generationStaged && $generationStage > $generationWork['stage'] + 1):
+        $resumeStage = max(2, $generationWork['stage'] + 1);
+        $resumeUrl = 'protocols/snmp/mibs/controllers/mib_repository.php?generate=' . icct_nms_h($generationBundle['id']) . '&stage=' . $resumeStage . '&review_prepared=1&ready=' . icct_nms_h($generationReadyToken); ?>
+        <p class="mib-generation-recovery" style="margin: 12px 0;">
+            <a class="button primary" href="<?= $resumeUrl ?>">← Return to Step <?= $resumeStage ?> (<?= $generationLabels[$resumeStage] ?? 'Previous Step' ?>)</a>
+        </p>
+    <?php endif; ?>
     <section
         id="mibGenerationProgress"
         class="<?= $generationDone ? 'complete' : '' ?>"
@@ -289,7 +296,7 @@ if (!$generationDone && !$generationError) {
                 <span>Next</span>
                 <span aria-hidden="true">→</span>
             </a>
-        <?php elseif ($generationStage === 2 && $generationStaged && !$generationError): ?>
+        <?php elseif (in_array($generationStage, [2, 3], true) && $generationStaged && !$generationError): ?>
             <button
                 type="submit"
                 form="mibGenerationForm"
@@ -298,6 +305,16 @@ if (!$generationDone && !$generationError) {
                 class="button primary mib-generation-next">
                 <span>Next</span>
                 <span aria-hidden="true">→</span>
+            </button>
+        <?php elseif ($generationStage === 4 && $generationStaged && !$generationError && $generationWork['stage'] >= 3): ?>
+            <button
+                type="submit"
+                form="mibAddForm"
+                name="action"
+                value="add_generated"
+                class="button primary mib-generation-next">
+                <span><?= $generationActionLabel ?></span>
+                <span aria-hidden="true">✓</span>
             </button>
         <?php else: ?>
             <button

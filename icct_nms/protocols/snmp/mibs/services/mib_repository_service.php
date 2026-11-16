@@ -3,6 +3,7 @@
 require_once __DIR__ . '/mib_repository_duplicates_service.php';
 require_once __DIR__ . '/mib_fault_presets_service.php';
 require_once __DIR__ . '/mib_graph_items_service.php';
+require_once dirname(__DIR__, 4) . '/presets/services/device_type_service.php';
 /** A MIB is reusable across device types; upload does not assign a device type. */
 function icct_mib_device_types()
 {
@@ -407,6 +408,21 @@ function icct_mib_profiles()
     ) ?:
         [];
 }
+function icct_mib_unique_template_name($baseName, $table, $reserved = [])
+{
+    $clean = preg_replace('/\s*\(\d+\)$/', '', (string) $baseName);
+    $name = icct_mib_name($clean, 180);
+    $candidate = icct_mib_name($baseName, 190);
+    $suffix = 1;
+    while (
+        in_array(strtolower($candidate), $reserved, true) ||
+        (function_exists('db_fetch_cell_prepared') && db_fetch_cell_prepared('SELECT id FROM ' . $table . ' WHERE name=? LIMIT 1', [$candidate]))
+    ) {
+        $candidate = icct_mib_name($name . ' (' . $suffix . ')', 190);
+        $suffix++;
+    }
+    return $candidate;
+}
 function icct_mib_plan($preview, $input)
 {
     $types = icct_mib_device_types();
@@ -428,6 +444,8 @@ function icct_mib_plan($preview, $input)
     }
     $name = icct_mib_name($input['template_name'] ?? '');
     $records = [];
+    $usedDataNames = [];
+    $usedGraphNames = [];
     foreach ($preview['records'] as $i => $record) {
         $record += icct_mib_bounds($record['syntax'] ?? '');
         if (empty($input['selected'][$i])) {
@@ -516,15 +534,29 @@ function icct_mib_plan($preview, $input)
         }
         $record['oid'] = $oid;
         $record['label'] = icct_mib_name($r['label'] ?? $record['label']);
-        $record['data_name'] = icct_mib_name(
-            $r['data_name'] ?? $name . ' - ' . $record['label'],
-            190,
-        );
-        if ($options['graph'] || !isset($input['preparation_stage'])) {
-            $record['graph_name'] = icct_mib_name(
-                $r['graph_name'] ?? $name . ' - ' . $record['label'],
-                190,
+        $baseDataName = !empty($r['data_name']) ? $r['data_name'] : ($name . ' - ' . $record['label']);
+        if (empty($input['saved_edit'])) {
+            $record['data_name'] = icct_mib_unique_template_name(
+                $baseDataName,
+                'data_template',
+                $usedDataNames,
             );
+        } else {
+            $record['data_name'] = icct_mib_name($baseDataName, 190);
+        }
+        $usedDataNames[] = strtolower($record['data_name']);
+        if ($options['graph'] || !isset($input['preparation_stage'])) {
+            $baseGraphName = !empty($r['graph_name']) ? $r['graph_name'] : ($name . ' - ' . $record['label']);
+            if (empty($input['saved_edit'])) {
+                $record['graph_name'] = icct_mib_unique_template_name(
+                    $baseGraphName,
+                    'graph_templates',
+                    $usedGraphNames,
+                );
+            } else {
+                $record['graph_name'] = icct_mib_name($baseGraphName, 190);
+            }
+            $usedGraphNames[] = strtolower($record['graph_name']);
         }
         $record['units'] = trim($r['units'] ?? $record['units']);
         if (strlen($record['units']) > 20) {

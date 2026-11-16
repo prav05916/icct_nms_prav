@@ -1,8 +1,16 @@
 <?php /** Prepared device settings retain wizard state until the final creation step. */
-$deviceGraphs = isset($generationWork['plans'][3])
-    ? icct_mib_graph_groups($generationWork['plans'][3]['records'])
+$devicePlan = $generationWork['plans'][3] ?? null;
+if (!$devicePlan && isset($generationBundle, $readyDraft)) {
+    try {
+        $devicePlan = icct_mib_staging_plan($generationBundle, $readyDraft, 3);
+    } catch (Throwable $e) {
+        $devicePlan = null;
+    }
+}
+$deviceGraphs = $devicePlan
+    ? icct_mib_graph_groups($devicePlan['records'])
     : [];
-$deviceRecords = $generationWork['plans'][3]['records'] ?? [];
+$deviceRecords = $devicePlan['records'] ?? [];
 $deviceDefaults = icct_mib_device_core_defaults($generationBundle, $deviceRecords);
 $deviceOptions = icct_mib_device_graph_options($generationBundle, $deviceRecords);
 $deviceChosen = array_values(array_intersect($readyDraft['device_template']['graphs'] ?? $deviceDefaults['graphs'], array_keys($deviceOptions)));

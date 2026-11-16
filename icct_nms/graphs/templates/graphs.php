@@ -94,9 +94,15 @@
                     </form>
                 </summary>
                 <div class="graph-association-content">
-                    <?php foreach ($template['details'] ?: [$template['parameters']] as $detail): ?>
-                        <?php $graphSettings = $detail['settings'];
-                        $graphItems = $detail['items']; ?>
+                    <?php
+                    $detailsList = !empty($template['details']) ? $template['details'] : (!empty($template['parameters']) ? [$template['parameters']] : []);
+                    foreach ($detailsList as $detail):
+                        if (!is_array($detail)) {
+                            continue;
+                        }
+                        $graphSettings = !empty($detail['settings']) && is_array($detail['settings']) ? $detail['settings'] : [];
+                        $graphItems = !empty($detail['items']) && is_array($detail['items']) ? $detail['items'] : [];
+                    ?>
                         <h3><?= icct_nms_h(
                             $graphSettings['title_cache'] ?? '' ?: $graphSettings['title'] ?? $template['name'],
                         ) ?></h3>

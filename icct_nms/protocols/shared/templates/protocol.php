@@ -124,11 +124,14 @@ $protocolPresetHelp = static function (string $key, string $label) use ($presetM
         </ol>
     </nav>
 <?php endif; ?>
-<?php $protocolStates = [];
-foreach (['cdp', 'lldp', 'snmp', 'ssh', 'serial', 'syslog', 'netflow', 'ntp'] as $key) {
-    $protocolStates[$key] = icct_backend_protocol_enabled($id, $key);
-} ?>
-<?php if (!$presetMode): ?>
+<?php
+$protocolStates = [];
+if (!$presetMode):
+    require_once __DIR__ . '/../services/backend/protocol_state.php';
+    foreach (['cdp', 'lldp', 'snmp', 'ssh', 'serial', 'syslog', 'netflow', 'ntp'] as $key) {
+        $protocolStates[$key] = function_exists('icct_backend_protocol_enabled') ? icct_backend_protocol_enabled($id, $key) : true;
+    }
+?>
     <script
         type="application/json"
         id="protocol-states"><?= json_encode($protocolStates, JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
@@ -152,7 +155,7 @@ foreach (['cdp', 'lldp', 'snmp', 'ssh', 'serial', 'syslog', 'netflow', 'ntp'] as
         value="" />
 </form>
 <div class="device-form protocol-form">
-    <div id="protocol-workspace" <?= (isset($initialStep) && $initialStep === 'protocol') ? '' : 'hidden' ?>>
+    <div id="protocol-workspace" <?= (!empty($presetMode) || (isset($initialStep) && $initialStep === 'protocol')) ? '' : 'hidden' ?>>
         <button
             class="add-protocol"
             id="add-protocol"

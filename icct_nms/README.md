@@ -2,6 +2,10 @@
 
 `icct_nms` is an independent Cacti 1.2.31 plugin implementing the shared responsive Inventory designs. It works with the NMS plugin disabled or uninstalled. Runtime requests and collectors use only Cacti core tables and this plugin's `plugin_icct_nms_*` tables. There is no other-plugin database lookup or fallback.
 
+## Quick Documentation Links
+* **[SSH Subsystem Guide & Offline RHEL 9.4 Setup](README_SSH.md)**: Architecture, offline compilation of bundled Guacamole strict-auth daemon, SELinux policy, adding SSH devices, host-key approval, connecting to terminal, and troubleshooting.
+* **[Monitoring Subsystem (NTP, NetFlow, Syslog)](monitoring/README.md)**: Complete working flow, real-time auto-refresh, binary packet decoding (NetFlow v5/v7/v9/IPFIX), multi-tier Chrony fallback, anomaly engine, and automated unit testing.
+
 ## Version 1.4.2
 
 A release can include the complete plugin and a verified OS/CPU-specific offline package bundle in one installer archive. The bootstrap verifies checksums, backs up existing source, preserves local configuration and uploaded data, copies source atomically and invokes native Cacti setup. Release builds exclude credentials, runtime data and developer tests. Debian offline APT installation uses empty repository sources/lists so local package installation cannot fall back to network repositories.

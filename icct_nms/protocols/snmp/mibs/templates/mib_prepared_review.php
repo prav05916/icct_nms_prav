@@ -10,6 +10,13 @@ if ($generationStage === 3) {
 $preparedPlan =
     $generationWork['plans'][$generationStage] ??
     ($generationWork['plans'][$generationStage - 1] ?? null);
+if (!$preparedPlan && isset($generationBundle, $readyDraft)) {
+    try {
+        $preparedPlan = icct_mib_staging_plan($generationBundle, $readyDraft, $generationStage);
+    } catch (Throwable $e) {
+        $preparedPlan = null;
+    }
+}
 $preparedRecords = $preparedPlan['records'] ?? [];
 $preparedDefaultPosition = array_key_first($preparedRecords);
 $preparedObjects = icct_mib_objects($generationBundle);

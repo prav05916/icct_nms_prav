@@ -642,31 +642,32 @@ function icct_nms_netflow_record_flows(int $hostId, array $flows): array {
         }
     }
 
-    // Update live state
+    // Update or insert live state
     icct_backend_category_execute(
-        'UPDATE plugin_icct_nms_netflow_state
-         SET status = "active",
-             total_bytes = total_bytes + ?,
-             total_packets = total_packets + ?,
-             total_flows = total_flows + ?,
-             top_json = ?,
-             anomaly_status = IF(? != "normal", ?, anomaly_status),
-             anomaly_reason = IF(? != "", ?, anomaly_reason),
+        'INSERT INTO plugin_icct_nms_netflow_state
+           (host_id, status, collector_path, total_bytes, total_packets, total_flows, top_json,
+            anomaly_status, anomaly_reason, last_data_at, last_success, last_error, updated_at)
+         VALUES (?, "active", "127.0.0.1:2055", ?, ?, ?, ?, ?, ?, NOW(), NOW(), "", NOW())
+         ON DUPLICATE KEY UPDATE
+             status = "active",
+             total_bytes = total_bytes + VALUES(total_bytes),
+             total_packets = total_packets + VALUES(total_packets),
+             total_flows = total_flows + VALUES(total_flows),
+             top_json = VALUES(top_json),
+             anomaly_status = IF(VALUES(anomaly_status) != "normal", VALUES(anomaly_status), anomaly_status),
+             anomaly_reason = IF(VALUES(anomaly_reason) != "", VALUES(anomaly_reason), anomaly_reason),
              last_data_at = NOW(),
              last_success = NOW(),
              last_error = "",
-             updated_at = NOW()
-         WHERE host_id = ?',
+             updated_at = NOW()',
         [
+            $hostId,
             $totalBytes,
             $totalPackets,
             count($flows),
             $topJson,
             $worstAnomalyStatus,
-            $worstAnomalyStatus,
             $worstReason,
-            $worstReason,
-            $hostId,
         ]
     );
 
@@ -1134,6 +1135,26 @@ function icct_nms_netflow_all(bool $refreshIfNeeded = true): array {
          WHERE d.enabled = 1
          ORDER BY h.description'
     ) ?: [];
+
+    if (empty($rows)) {
+        // Auto-seed existing active Cacti devices so NetFlow is immediately active
+        $cactiHosts = (function_exists('db_fetch_assoc') && !defined('ICCT_TESTING'))
+            ? (db_fetch_assoc('SELECT id, hostname, description FROM host WHERE disabled = "" LIMIT 10') ?: [])
+            : [];
+        foreach ($cactiHosts as $ch) {
+            if (!empty($ch['id'])) {
+                icct_nms_netflow_upsert((int)$ch['id'], [
+                    'exporter_ip'    => $ch['hostname'] ?? '127.0.0.1',
+                    'collector_ip'   => '127.0.0.1',
+                    'collector_port' => 2055,
+                    'flow_version'   => 9,
+                ]);
+            }
+        }
+        if (!empty($cactiHosts)) {
+            return icct_nms_netflow_all(false);
+        }
+    }
 
     foreach ($rows as &$row) {
         $collector = explode(':', $row['collector_path'] ?: '127.0.0.1:2055');

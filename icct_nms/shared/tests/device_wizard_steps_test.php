@@ -237,10 +237,25 @@ $expectedSteps = [
 
 // Helper to render the complete wizard markup for a given initial step
 function renderWizardStep(string $step): string {
-    global $root, $id, $wizard, $readonly, $old, $host, $values, $title, $discovery, $discoveryResult;
+    global $root, $id, $wizard, $readonly, $old, $host, $title, $discovery, $discoveryResult;
     global $cloneId, $failedProtocol, $presetMode, $protocolDraft, $diag, $ssh, $serial, $connections;
     global $graphAssociations, $availableGraphTemplates, $dataQueryAssociations, $availableDataQueries;
     global $dataQueryMethods, $defaultDataQueryMethod, $shortNameAuto;
+
+    // Fresh values for device.php on each step render
+    $values = $old + [
+        'enabled' => true,
+        'short_name' => 'CR01',
+        'category_id' => 1,
+        'device_type' => 'Router',
+        'rack_id' => 0,
+        'rack_position' => '',
+        'notes' => '',
+        'serial_number' => '',
+        'mac_address' => '',
+        'chassis_id' => '',
+        'cross_launch_url' => '',
+    ];
 
     $initialStep = $step;
     $activeStep = $step;
@@ -272,12 +287,12 @@ foreach ($expectedSteps as $stepKey => $meta) {
 
     // Verify visibility rules for step 1 vs other steps
     if ($stepKey === 'basic') {
-        assert(strpos($html, '<fieldset class="device-fields"  ') !== false || strpos($html, '<fieldset class="device-fields" >') !== false || !preg_match('~<fieldset class="device-fields"\s+hidden~', $html),
+        assert(preg_match('~<fieldset\s+class="device-fields"(?!\s+hidden)~', $html) === 1,
             "Basic step fieldset should NOT be hidden");
         assert(strpos($html, '<div id="wizard-panels" hidden>') !== false,
             "Wizard panels should be hidden on basic step");
     } else {
-        assert(preg_match('~<fieldset class="device-fields"\s+hidden~', $html) === 1,
+        assert(preg_match('~<fieldset\s+class="device-fields"\s+hidden~', $html) === 1,
             "Basic step fieldset MUST be hidden on step $stepKey");
         assert(strpos($html, '<div id="wizard-panels">') !== false,
             "Wizard panels MUST be visible on step $stepKey");

@@ -15,6 +15,10 @@ require_once dirname(__DIR__, 2) . '/inventory/services/device_service.php';
 require_once dirname(__DIR__, 2) . '/protocols/shared/services/protocol_service.php';
 require_once dirname(__DIR__, 2) . '/protocols/serial/services/serial_service.php';
 require_once dirname(__DIR__, 2) . '/protocols/shared/services/protocol_preset_service.php';
+require_once dirname(__DIR__, 2) . '/protocols/syslog/services/backend/syslog.php';
+require_once dirname(__DIR__, 2) . '/protocols/syslog/services/syslog_service.php';
+require_once dirname(__DIR__, 2) . '/protocols/netflow/services/netflow_service.php';
+require_once dirname(__DIR__, 2) . '/protocols/ntp/services/ntp_service.php';
 $presetTabs = [
     'rack-config' => 'Rack Config',
     'protocols' => 'Protocols',
